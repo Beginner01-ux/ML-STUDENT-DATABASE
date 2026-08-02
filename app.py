@@ -14,9 +14,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ===== SVG LOGO DEFINITION =====
+# ===== HIGH-DEFINITION GOLDEN LOGO (SVG) =====
 SVG_LOGO_CODE = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 310" style="width:100%; height:100%; max-width:220px; max-height:220px;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 310" style="width:100%; height:100%; max-width:180px; max-height:180px;">
   <defs>
     <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#FFF099" />
@@ -49,108 +49,131 @@ SVG_LOGO_CODE = """
 </svg>
 """
 
-# ===== STYLES & DYNAMIC RESPONSIVE CANVAS BACKGROUND =====
+# ===== RESPONSIVE SPLIT-SCREEN STYLES =====
 st.markdown("""
 <style>
-    /* Reset Streamlit default padding & layout limits */
-    .main .block-container {
-        max-width: 100% !important;
-        padding: 1rem 2rem !important;
-        margin: 0 auto !important;
-    }
-
+    /* Global Layout Settings */
     [data-testid="stAppViewContainer"] {
-        background: #030712;
+        background: #0f172a;
         overflow-x: hidden;
     }
-
-    /* Column Responsiveness Overrides */
+    .main .block-container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
     [data-testid="stHorizontalBlock"] {
-        align-items: center !important;
+        gap: 0 !important;
+        align-items: stretch !important;
     }
 
-    /* Desktop View Layout */
-    @media (min-width: 769px) {
-        [data-testid="column"] {
-            padding: 1rem !important;
-        }
+    /* Left Panel (Vibrant Hero Theme inspired by reference design) */
+    .left-panel-container {
+        background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: #ffffff;
+        position: relative;
+        overflow: hidden;
     }
 
-    /* Mobile & Tablet Layout Adjustments (<768px) */
+    /* Right Panel (Dark Functional Input Theme) */
+    .right-panel-container {
+        background: #111827;
+        min-height: 100vh;
+        padding: 40px 30px;
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* Responsive Mobile Overrides */
     @media (max-width: 768px) {
-        .main .block-container {
-            padding: 0.5rem 0.75rem !important;
-        }
-
-        /* Force columns to stack smoothly vertically on mobile */
         [data-testid="stHorizontalBlock"] {
             flex-direction: column !important;
-            gap: 1rem !important;
         }
-
         [data-testid="column"] {
             width: 100% !important;
             flex: 1 1 100% !important;
-            min-width: 100% !important;
-            padding: 0 !important;
+        }
+        .left-panel-container {
+            min-height: auto;
+            padding: 30px 15px;
+        }
+        .right-panel-container {
+            min-height: auto;
+            padding: 30px 15px;
         }
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Inject Full-Viewport Responsive Particle Canvas
+# ===== INTERACTIVE FLOATING CANVAS BACKGROUND (Left Panel Physics) =====
 canvas_js = """
 <script>
     (function() {
         const parentDoc = window.parent.document;
-        let canvas = parentDoc.getElementById('responsive-hero-canvas');
+        let canvas = parentDoc.getElementById('interactive-hero-canvas');
         
         if (!canvas) {
             canvas = parentDoc.createElement('canvas');
-            canvas.id = 'responsive-hero-canvas';
-            canvas.style.position = 'fixed';
+            canvas.id = 'interactive-hero-canvas';
+            canvas.style.position = 'absolute';
             canvas.style.top = '0';
             canvas.style.left = '0';
-            canvas.style.width = '100vw';
-            canvas.style.height = '100vh';
-            canvas.style.zIndex = '-1';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.zIndex = '1';
             canvas.style.pointerEvents = 'none';
-            canvas.style.background = 'radial-gradient(circle at 30% 50%, #1e1b4b 0%, #030712 100%)';
-            parentDoc.body.appendChild(canvas);
+            
+            // Find left column container to append canvas into
+            const cols = parentDoc.querySelectorAll('[data-testid="column"]');
+            if (cols.length > 0) {
+                cols[0].style.position = 'relative';
+                cols[0].style.overflow = 'hidden';
+                cols[0].insertBefore(canvas, cols[0].firstChild);
+            }
 
             const ctx = canvas.getContext('2d');
 
             function resize() {
-                canvas.width = window.parent.innerWidth;
-                canvas.height = window.parent.innerHeight;
+                if (cols.length > 0) {
+                    canvas.width = cols[0].clientWidth;
+                    canvas.height = cols[0].clientHeight;
+                }
             }
             window.parent.addEventListener('resize', resize);
             resize();
 
             const elements = [];
-            const glyphs = ['α', 'β', 'Ω', '∫', 'λ', 'π', 'Δ', '∑'];
-            const count = window.parent.innerWidth < 768 ? 25 : 50;
-
-            for (let i = 0; i < count; i++) {
+            const glyphs = ['α', 'β', 'Ω', '∫', 'λ', 'π', 'Δ', '∑', 'H₂O', 'NaCl'];
+            for (let i = 0; i < 30; i++) {
                 elements.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.5,
-                    vy: (Math.random() - 0.5) * 0.5,
+                    vx: (Math.random() - 0.5) * 0.8,
+                    vy: (Math.random() - 0.5) * 0.8,
                     glyph: glyphs[Math.floor(Math.random() * glyphs.length)]
                 });
             }
 
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                resize();
                 elements.forEach(el => {
                     el.x += el.vx;
                     el.y += el.vy;
                     if (el.x < 0 || el.x > canvas.width) el.vx *= -1;
                     if (el.y < 0 || el.y > canvas.height) el.vy *= -1;
                     
-                    ctx.font = '14px monospace';
-                    ctx.fillStyle = 'rgba(250, 204, 21, 0.6)';
+                    ctx.font = '13px sans-serif';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
                     ctx.fillText(el.glyph, el.x, el.y);
                 });
                 requestAnimationFrame(draw);
@@ -162,7 +185,7 @@ canvas_js = """
 """
 components.html(canvas_js, height=0)
 
-# ===== HELPER FUNCTIONS =====
+# ===== UTILITY FUNCTIONS =====
 def validate_test_number(test_no):
     pattern = r'^[JFMASONDjfsond](1[0-2]|[1-9])-\d{2}-\d{2}$'
     return bool(re.match(pattern, test_no.strip()))
@@ -185,7 +208,7 @@ def format_percentage(val):
     except Exception:
         return "0%"
 
-# ===== PRINTABLE CERTIFICATE GENERATOR =====
+# ===== MODERN A4 FULL-PAGE CERTIFICATE / MARKSHEET (PDF PRINT READY) =====
 def generate_report_card(serial_no, test_no, student_data):
     name = student_data.get('name', 'N/A')
     father_name = student_data.get('father_name', 'N/A')
@@ -197,6 +220,12 @@ def generate_report_card(serial_no, test_no, student_data):
     rank = student_data.get('class_rank', 'N/A')
     section = student_data.get('section', 'A')
 
+    # Parse numeric score for graph visualization bar
+    try:
+        numeric_score = float(str(test_score).split('/')[0])
+    except:
+        numeric_score = 75.0
+
     certificate_html = f"""
     <!DOCTYPE html>
     <html>
@@ -205,61 +234,114 @@ def generate_report_card(serial_no, test_no, student_data):
         <style>
             * {{ box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }}
             @page {{ size: A4 portrait; margin: 0; }}
-            body {{ margin: 0; padding: 10px; font-family: system-ui, -apple-system, sans-serif; background: transparent; color: #fff; }}
-            .cert-card {{ background: #0b1329; border: 2px solid #facc15; border-radius: 12px; padding: 20px; text-align: center; max-width: 100%; }}
-            .logo-box {{ width: 65px; height: 65px; margin: 0 auto 10px auto; }}
-            .title {{ font-size: clamp(14px, 3vw, 18px); font-weight: bold; color: #facc15; margin-top: 5px; }}
-            .subtitle {{ font-size: clamp(9px, 2vw, 11px); color: #94a3b8; text-transform: uppercase; margin-bottom: 15px; }}
-            .student-name {{ font-size: clamp(18px, 4vw, 24px); font-weight: bold; color: #fff; margin: 8px 0; }}
-            .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 15px 0; }}
-            .box {{ background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(250, 204, 21, 0.3); padding: 8px; border-radius: 8px; }}
-            .val {{ font-size: 16px; font-weight: bold; color: #facc15; }}
-            .lbl {{ font-size: 8px; color: #94a3b8; text-transform: uppercase; }}
-            .btn {{ background: #facc15; color: #000; border: none; padding: 10px 18px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px; text-transform: uppercase; }}
+            body {{ margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; background: #0b1329; color: #fff; }}
+            .cert-page {{ 
+                width: 210mm; 
+                height: 297mm; 
+                max-width: 100%;
+                margin: 0 auto;
+                background: linear-gradient(135deg, #0b1329 0%, #1e1b4b 100%);
+                border: 4px solid #facc15; 
+                padding: 40px; 
+                display: flex; 
+                flex-direction: column; 
+                justify-content: space-between;
+                position: relative;
+            }}
+            .header {{ text-align: center; }}
+            .logo-box {{ width: 85px; height: 85px; margin: 0 auto 10px auto; }}
+            .school-title {{ font-size: 16px; font-weight: bold; color: #facc15; text-transform: uppercase; letter-spacing: 1px; }}
+            .cert-title {{ font-size: 24px; font-weight: 800; color: #ffffff; margin-top: 5px; }}
+            
+            .student-info-box {{ background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(250, 204, 21, 0.3); border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0; }}
+            .student-name {{ font-size: 28px; font-weight: bold; color: #facc15; margin-bottom: 5px; }}
+            .student-details {{ font-size: 13px; color: #cbd5e1; }}
+
+            .metrics-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }}
+            .metric-card {{ background: rgba(30, 41, 59, 0.9); border: 1px solid #facc15; border-radius: 10px; padding: 15px; text-align: center; }}
+            .metric-val {{ font-size: 22px; font-weight: bold; color: #facc15; }}
+            .metric-lbl {{ font-size: 10px; color: #94a3b8; text-transform: uppercase; margin-top: 4px; }}
+
+            /* Data Visualization Graph Elements */
+            .graph-section {{ background: rgba(15, 23, 42, 0.6); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); margin: 15px 0; }}
+            .graph-title {{ font-size: 14px; font-weight: bold; color: #facc15; margin-bottom: 12px; text-transform: uppercase; }}
+            .bar-container {{ background: #334155; border-radius: 6px; height: 18px; width: 100%; overflow: hidden; position: relative; }}
+            .bar-fill {{ background: linear-gradient(90deg, #eab308, #facc15); height: 100%; width: {percentage_str}; border-radius: 6px; }}
+
+            .footer-info {{ display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }}
+            .print-btn {{ background: #facc15; color: #000; border: none; padding: 12px 25px; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-size: 14px; display: block; width: 100%; margin-top: 15px; }}
+            
             @media print {{
-                body {{ background: #0b1329 !important; padding: 0 !important; }}
-                .btn {{ display: none !important; }}
-                .cert-card {{ height: 100vh; border-radius: 0; display: flex; flex-direction: column; justify-content: center; }}
+                body {{ background: #0b1329 !important; }}
+                .print-btn {{ display: none !important; }}
+                .cert-page {{ border: none; height: 100vh; width: 100vw; padding: 20px; }}
             }}
         </style>
     </head>
     <body>
-        <div class="cert-card">
-            <div class="logo-box">{SVG_LOGO_CODE}</div>
-            <div class="title">Govt Boys Higher Secondary School Tando Bago</div>
-            <div class="subtitle">Academic Progress Certificate</div>
-            <div class="student-name">{name}</div>
-            <div style="font-size: 11px; color: #cbd5e1;">Father's Name: {father_name} | Class: {cls}-{section} | Seat No: {roll_no}</div>
-            
-            <div class="grid">
-                <div class="box"><div class="lbl">Score</div><div class="val">{test_score}</div></div>
-                <div class="box"><div class="lbl">Percentage</div><div class="val">{percentage_str}</div></div>
-                <div class="box"><div class="lbl">Class Rank</div><div class="val">{rank}</div></div>
-                <div class="box"><div class="lbl">Subject</div><div class="val" style="font-size:11px;">{subject}</div></div>
+        <div class="cert-page">
+            <div class="header">
+                <div class="logo-box">{SVG_LOGO_CODE}</div>
+                <div class="school-title">Govt Boys Higher Secondary School Tando Bago</div>
+                <div class="cert-title">Academic Progress Certificate</div>
             </div>
 
-            <div style="font-size: 10px; color: #64748b; margin-top: 10px;">Test Code: {test_no} | Serial: {serial_no}</div>
-            <button class="btn" onclick="window.print()">️ Print / Save PDF Certificate</button>
+            <div class="student-info-box">
+                <div class="student-name">{name}</div>
+                <div class="student-details">Father's Name: <b>{father_name}</b> &nbsp;|&nbsp; Class: <b>{cls}-{section}</b> &nbsp;|&nbsp; Roll No: <b>{roll_no}</b></div>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card"><div class="metric-val">{test_score}</div><div class="metric-lbl">Total Score</div></div>
+                <div class="metric-card"><div class="metric-val">{percentage_str}</div><div class="metric-lbl">Percentage</div></div>
+                <div class="metric-card"><div class="metric-val">#{rank}</div><div class="metric-lbl">Class Rank</div></div>
+                <div class="metric-card"><div class="metric-val" style="font-size: 15px; padding-top: 4px;">{subject}</div><div class="metric-lbl">Subject</div></div>
+            </div>
+
+            <div class="graph-section">
+                <div class="graph-title">Performance Accuracy Graph ({percentage_str})</div>
+                <div class="bar-container">
+                    <div class="bar-fill"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="footer-info">
+                    <span>Test Code: <b>{test_no}</b></span>
+                    <span>Serial: <b>{serial_no}</b></span>
+                    <span>Verified Official Document</span>
+                </div>
+                <button class="print-btn" onclick="window.print()">️ Download Full-Page A4 PDF Certificate</button>
+            </div>
         </div>
     </body>
     </html>
     """
-    components.html(certificate_html, height=480, scrolling=False)
+    components.html(certificate_html, height=720, scrolling=False)
 
-# ===== LAYOUT COLUMNS =====
-left_col, right_col = st.columns([1, 1], gap="large")
+# ===== MAIN SPLIT-SCREEN LAYOUT COLUMNS =====
+left_col, right_col = st.columns([1, 1], gap="small")
 
+# --- LEFT PANEL (Hero Branding & Interactive Canvas) ---
 with left_col:
-    hero_html = f"""
-    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:15px; color:#ffffff; font-family:system-ui, sans-serif;">
-        <div style="width:100%; max-width:180px; height:auto; margin-bottom:12px;">{SVG_LOGO_CODE}</div>
-        <div style="font-size:clamp(18px, 3.5vw, 24px); font-weight:800; color:#ffffff;">Welcome to Student Portal</div>
-        <div style="font-size:clamp(10px, 1.8vw, 12px); color:#94a3b8; letter-spacing:1px; text-transform:uppercase; margin-top:4px;">Govt Boys Higher Secondary School Tando Bago</div>
+    st.markdown("""
+    <div class="left-panel-container">
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"""
+    <div style="width:100%; display:flex; justify-content:center; position:relative; z-index:2; margin-bottom: 15px;">
+        {SVG_LOGO_CODE}
     </div>
-    """
-    components.html(hero_html, height=270)
+    <h1 style="font-size:clamp(24px, 4vw, 36px); font-weight:800; margin:10px 0; position:relative; z-index:2;">Welcome to Student Portal</h1>
+    <p style="font-size:clamp(11px, 2vw, 13px); letter-spacing:1.5px; text-transform:uppercase; opacity:0.9; position:relative; z-index:2;">Govt Boys Higher Secondary School Tando Bago</p>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
 
+# --- RIGHT PANEL (Functional Data Entry & Workflow) ---
 with right_col:
+    st.markdown('<div class="right-panel-container">', unsafe_allow_html=True)
+    
     st.subheader("Search Student Record")
     st.caption("Enter exam details to view academic progress certificate")
 
@@ -334,4 +416,6 @@ with right_col:
                 st.error(f"❌ Test file '{file_name}' not found.")
         else:
             st.error("❌ Invalid Test Code format! Use format like: A4-25-01")
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
