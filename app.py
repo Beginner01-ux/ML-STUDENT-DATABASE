@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ===== INJECT FULL-PAGE CANVAS & EXECUTIVE BRANDING DIRECTLY INTO PARENT DOM =====
+# ===== INJECT FULL-PAGE CANVAS DIRECTLY INTO PARENT DOM =====
 parent_injection_code = """
 <script>
     (function() {
@@ -203,7 +203,7 @@ st.markdown("""
     <div class="main-title">Student Results Portal</div>
     <div class="sub-title">Govt Boys Higher Secondary School Tando Bago</div>
 </div>
-""", unsafe_allow_html=true)
+""", unsafe_allow_html=True)
 
 # ===== UTILITY FUNCTIONS =====
 def validate_test_number(test_no):
