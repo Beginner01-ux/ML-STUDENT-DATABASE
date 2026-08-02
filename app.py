@@ -14,45 +14,37 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ===== HIGH-DEFINITION GOLDEN LOGO (SVG) =====
+# ===== OFFICIAL HD GOLDEN SHIELD SVG LOGO =====
 SVG_LOGO_CODE = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 310" style="width:100%; height:100%; max-width:180px; max-height:180px;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" style="width:100%; height:100%; max-width:160px; max-height:160px; display:block; margin:0 auto;">
   <defs>
     <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FFF099" />
-      <stop offset="30%" stop-color="#FACC15" />
-      <stop offset="70%" stop-color="#EAB308" />
-      <stop offset="100%" stop-color="#A16207" />
+      <stop offset="0%" stop-color="#FFE55C" />
+      <stop offset="50%" stop-color="#FACC15" />
+      <stop offset="100%" stop-color="#854D0E" />
     </linearGradient>
     <linearGradient id="goldBright" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" stop-color="#CA8A04" />
+      <stop offset="0%" stop-color="#A16207" />
       <stop offset="50%" stop-color="#FDE047" />
       <stop offset="100%" stop-color="#FEF08A" />
     </linearGradient>
     <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feGaussianBlur stdDeviation="4" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
   </defs>
-  <polygon points="150,8 159,20 150,32 141,20" fill="url(#goldGradient)" filter="url(#goldGlow)"/>
-  <path d="M 150,42 L 40,90 L 40,205 L 150,265 L 260,205 L 260,90 Z M 150,66 L 242,106 L 242,194 L 150,244 L 58,194 L 58,106 Z" 
-        fill="url(#goldGradient)" fill-rule="evenodd" filter="url(#goldGlow)"/>
-  <line x1="150" y1="42" x2="150" y2="244" stroke="url(#goldGradient)" stroke-width="4" stroke-linecap="round"/>
-  <path d="M 72,110 L 96,110 L 96,178 L 115,142 L 132,178 L 132,110 L 145,110 L 145,198 L 132,198 L 115,164 L 98,198 L 72,198 Z" fill="url(#goldBright)"/>
-  <path d="M 174,110 L 194,110 L 194,180 L 232,180 L 232,198 L 174,198 Z" fill="url(#goldBright)"/>
-  <g transform="translate(150, 260) rotate(-28.5)">
-    <text x="-95" y="15" font-family="sans-serif" font-weight="900" font-size="18" fill="#FFFFFF" letter-spacing="2">MANISH</text>
-  </g>
-  <g transform="translate(150, 260) rotate(28.5)">
-    <text x="18" y="15" font-family="sans-serif" font-weight="900" font-size="18" fill="#FFFFFF" letter-spacing="2">LOHANA</text>
-  </g>
+  <path d="M 160,15 L 50,65 L 50,190 L 160,255 L 270,190 L 270,65 Z" fill="#0f172a" stroke="url(#goldGradient)" stroke-width="6" filter="url(#goldGlow)"/>
+  <path d="M 160,28 L 63,73 L 63,182 L 160,238 L 257,182 L 257,73 Z" fill="none" stroke="url(#goldGradient)" stroke-width="2"/>
+  <path d="M 95,110 L 115,110 L 115,170 L 132,138 L 150,170 L 150,110 L 168,110 L 168,190 L 150,190 L 132,158 L 115,190 L 95,190 Z" fill="url(#goldBright)"/>
+  <path d="M 190,110 L 210,110 L 210,172 L 235,172 L 235,190 L 190,190 Z" fill="url(#goldBright)"/>
+  <path d="M 30,225 L 290,225 L 270,275 L 50,275 Z" fill="url(#goldGradient)" stroke="#713F12" stroke-width="2"/>
+  <text x="160" y="258" font-family="sans-serif" font-weight="900" font-size="20" fill="#0b1329" text-anchor="middle" letter-spacing="3">MANISH LOHANA</text>
 </svg>
 """
 
-# ===== RESPONSIVE SPLIT-SCREEN STYLES =====
+# ===== STYLING & RESPONSIVE GRID CSS =====
 st.markdown("""
 <style>
-    /* Global Layout Settings */
     [data-testid="stAppViewContainer"] {
         background: #0f172a;
         overflow-x: hidden;
@@ -66,10 +58,9 @@ st.markdown("""
         gap: 0 !important;
         align-items: stretch !important;
     }
-
-    /* Left Panel (Vibrant Hero Theme inspired by reference design) */
-    .left-panel-container {
-        background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+    .left-hero-panel {
+        background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 100%);
+        border-right: 1px solid rgba(250, 204, 21, 0.2);
         min-height: 100vh;
         padding: 40px 20px;
         display: flex;
@@ -81,9 +72,7 @@ st.markdown("""
         position: relative;
         overflow: hidden;
     }
-
-    /* Right Panel (Dark Functional Input Theme) */
-    .right-panel-container {
+    .right-input-panel {
         background: #111827;
         min-height: 100vh;
         padding: 40px 30px;
@@ -92,8 +81,6 @@ st.markdown("""
         flex-direction: column;
         justify-content: center;
     }
-
-    /* Responsive Mobile Overrides */
     @media (max-width: 768px) {
         [data-testid="stHorizontalBlock"] {
             flex-direction: column !important;
@@ -102,11 +89,11 @@ st.markdown("""
             width: 100% !important;
             flex: 1 1 100% !important;
         }
-        .left-panel-container {
+        .left-hero-panel {
             min-height: auto;
             padding: 30px 15px;
         }
-        .right-panel-container {
+        .right-input-panel {
             min-height: auto;
             padding: 30px 15px;
         }
@@ -114,16 +101,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ===== INTERACTIVE FLOATING CANVAS BACKGROUND (Left Panel Physics) =====
-canvas_js = """
+# ===== LIGHTWEIGHT HTML5 CANVAS BACKGROUND (Molecules & Math Glyphs) =====
+interactive_canvas_js = """
 <script>
     (function() {
         const parentDoc = window.parent.document;
-        let canvas = parentDoc.getElementById('interactive-hero-canvas');
-        
+        let canvas = parentDoc.getElementById('portal-interactive-canvas');
         if (!canvas) {
             canvas = parentDoc.createElement('canvas');
-            canvas.id = 'interactive-hero-canvas';
+            canvas.id = 'portal-interactive-canvas';
             canvas.style.position = 'absolute';
             canvas.style.top = '0';
             canvas.style.left = '0';
@@ -132,7 +118,6 @@ canvas_js = """
             canvas.style.zIndex = '1';
             canvas.style.pointerEvents = 'none';
             
-            // Find left column container to append canvas into
             const cols = parentDoc.querySelectorAll('[data-testid="column"]');
             if (cols.length > 0) {
                 cols[0].style.position = 'relative';
@@ -141,51 +126,50 @@ canvas_js = """
             }
 
             const ctx = canvas.getContext('2d');
-
-            function resize() {
+            function resizeCanvas() {
                 if (cols.length > 0) {
                     canvas.width = cols[0].clientWidth;
                     canvas.height = cols[0].clientHeight;
                 }
             }
-            window.parent.addEventListener('resize', resize);
-            resize();
+            window.parent.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
 
-            const elements = [];
-            const glyphs = ['α', 'β', 'Ω', '∫', 'λ', 'π', 'Δ', '∑', 'H₂O', 'NaCl'];
-            for (let i = 0; i < 30; i++) {
-                elements.push({
+            const particles = [];
+            const symbols = ['H₂O', 'NaCl', 'CO₂', 'α', 'β', 'Ω', '∫', 'λ', 'π', 'Δ', 'C₆H₁₂O₆'];
+            for (let i = 0; i < 20; i++) {
+                particles.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.8,
-                    vy: (Math.random() - 0.5) * 0.8,
-                    glyph: glyphs[Math.floor(Math.random() * glyphs.length)]
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    text: symbols[Math.floor(Math.random() * symbols.length)]
                 });
             }
 
-            function draw() {
+            function animateParticles() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                resize();
-                elements.forEach(el => {
-                    el.x += el.vx;
-                    el.y += el.vy;
-                    if (el.x < 0 || el.x > canvas.width) el.vx *= -1;
-                    if (el.y < 0 || el.y > canvas.height) el.vy *= -1;
+                resizeCanvas();
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
                     
-                    ctx.font = '13px sans-serif';
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-                    ctx.fillText(el.glyph, el.x, el.y);
+                    ctx.font = '12px sans-serif';
+                    ctx.fillStyle = 'rgba(250, 204, 21, 0.2)';
+                    ctx.fillText(p.text, p.x, p.y);
                 });
-                requestAnimationFrame(draw);
+                requestAnimationFrame(animateParticles);
             }
-            draw();
+            animateParticles();
         }
     })();
 </script>
 """
-components.html(canvas_js, height=0)
+components.html(interactive_canvas_js, height=0)
 
-# ===== UTILITY FUNCTIONS =====
+# ===== HELPER UTILITIES =====
 def validate_test_number(test_no):
     pattern = r'^[JFMASONDjfsond](1[0-2]|[1-9])-\d{2}-\d{2}$'
     return bool(re.match(pattern, test_no.strip()))
@@ -208,7 +192,7 @@ def format_percentage(val):
     except Exception:
         return "0%"
 
-# ===== MODERN A4 FULL-PAGE CERTIFICATE / MARKSHEET (PDF PRINT READY) =====
+# ===== PRINT-READY A4 CERTIFICATE WITH GRAPHS =====
 def generate_report_card(serial_no, test_no, student_data):
     name = student_data.get('name', 'N/A')
     father_name = student_data.get('father_name', 'N/A')
@@ -219,12 +203,6 @@ def generate_report_card(serial_no, test_no, student_data):
     cls = student_data.get('class', 'X')
     rank = student_data.get('class_rank', 'N/A')
     section = student_data.get('section', 'A')
-
-    # Parse numeric score for graph visualization bar
-    try:
-        numeric_score = float(str(test_score).split('/')[0])
-    except:
-        numeric_score = 75.0
 
     certificate_html = f"""
     <!DOCTYPE html>
@@ -246,31 +224,23 @@ def generate_report_card(serial_no, test_no, student_data):
                 display: flex; 
                 flex-direction: column; 
                 justify-content: space-between;
-                position: relative;
             }}
             .header {{ text-align: center; }}
-            .logo-box {{ width: 85px; height: 85px; margin: 0 auto 10px auto; }}
-            .school-title {{ font-size: 16px; font-weight: bold; color: #facc15; text-transform: uppercase; letter-spacing: 1px; }}
-            .cert-title {{ font-size: 24px; font-weight: 800; color: #ffffff; margin-top: 5px; }}
-            
-            .student-info-box {{ background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(250, 204, 21, 0.3); border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0; }}
-            .student-name {{ font-size: 28px; font-weight: bold; color: #facc15; margin-bottom: 5px; }}
+            .school-title {{ font-size: 15px; font-weight: bold; color: #facc15; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; }}
+            .cert-title {{ font-size: 22px; font-weight: 800; color: #ffffff; margin-top: 5px; }}
+            .student-info-box {{ background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(250, 204, 21, 0.3); border-radius: 12px; padding: 18px; text-align: center; margin: 15px 0; }}
+            .student-name {{ font-size: 26px; font-weight: bold; color: #facc15; margin-bottom: 5px; }}
             .student-details {{ font-size: 13px; color: #cbd5e1; }}
-
-            .metrics-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }}
-            .metric-card {{ background: rgba(30, 41, 59, 0.9); border: 1px solid #facc15; border-radius: 10px; padding: 15px; text-align: center; }}
-            .metric-val {{ font-size: 22px; font-weight: bold; color: #facc15; }}
-            .metric-lbl {{ font-size: 10px; color: #94a3b8; text-transform: uppercase; margin-top: 4px; }}
-
-            /* Data Visualization Graph Elements */
-            .graph-section {{ background: rgba(15, 23, 42, 0.6); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); margin: 15px 0; }}
-            .graph-title {{ font-size: 14px; font-weight: bold; color: #facc15; margin-bottom: 12px; text-transform: uppercase; }}
-            .bar-container {{ background: #334155; border-radius: 6px; height: 18px; width: 100%; overflow: hidden; position: relative; }}
+            .metrics-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 15px 0; }}
+            .metric-card {{ background: rgba(30, 41, 59, 0.9); border: 1px solid #facc15; border-radius: 10px; padding: 12px; text-align: center; }}
+            .metric-val {{ font-size: 20px; font-weight: bold; color: #facc15; }}
+            .metric-lbl {{ font-size: 9px; color: #94a3b8; text-transform: uppercase; margin-top: 4px; }}
+            .graph-section {{ background: rgba(15, 23, 42, 0.6); border-radius: 12px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); margin: 10px 0; }}
+            .graph-title {{ font-size: 13px; font-weight: bold; color: #facc15; margin-bottom: 10px; text-transform: uppercase; }}
+            .bar-container {{ background: #334155; border-radius: 6px; height: 16px; width: 100%; overflow: hidden; }}
             .bar-fill {{ background: linear-gradient(90deg, #eab308, #facc15); height: 100%; width: {percentage_str}; border-radius: 6px; }}
-
-            .footer-info {{ display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }}
-            .print-btn {{ background: #facc15; color: #000; border: none; padding: 12px 25px; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-size: 14px; display: block; width: 100%; margin-top: 15px; }}
-            
+            .footer-info {{ display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; }}
+            .print-btn {{ background: #facc15; color: #000; border: none; padding: 12px 25px; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-size: 13px; display: block; width: 100%; margin-top: 12px; }}
             @media print {{
                 body {{ background: #0b1329 !important; }}
                 .print-btn {{ display: none !important; }}
@@ -281,30 +251,24 @@ def generate_report_card(serial_no, test_no, student_data):
     <body>
         <div class="cert-page">
             <div class="header">
-                <div class="logo-box">{SVG_LOGO_CODE}</div>
+                {SVG_LOGO_CODE}
                 <div class="school-title">Govt Boys Higher Secondary School Tando Bago</div>
                 <div class="cert-title">Academic Progress Certificate</div>
             </div>
-
             <div class="student-info-box">
                 <div class="student-name">{name}</div>
                 <div class="student-details">Father's Name: <b>{father_name}</b> &nbsp;|&nbsp; Class: <b>{cls}-{section}</b> &nbsp;|&nbsp; Roll No: <b>{roll_no}</b></div>
             </div>
-
             <div class="metrics-grid">
                 <div class="metric-card"><div class="metric-val">{test_score}</div><div class="metric-lbl">Total Score</div></div>
                 <div class="metric-card"><div class="metric-val">{percentage_str}</div><div class="metric-lbl">Percentage</div></div>
                 <div class="metric-card"><div class="metric-val">#{rank}</div><div class="metric-lbl">Class Rank</div></div>
-                <div class="metric-card"><div class="metric-val" style="font-size: 15px; padding-top: 4px;">{subject}</div><div class="metric-lbl">Subject</div></div>
+                <div class="metric-card"><div class="metric-val" style="font-size: 14px; padding-top: 4px;">{subject}</div><div class="metric-lbl">Subject</div></div>
             </div>
-
             <div class="graph-section">
                 <div class="graph-title">Performance Accuracy Graph ({percentage_str})</div>
-                <div class="bar-container">
-                    <div class="bar-fill"></div>
-                </div>
+                <div class="bar-container"><div class="bar-fill"></div></div>
             </div>
-
             <div>
                 <div class="footer-info">
                     <span>Test Code: <b>{test_no}</b></span>
@@ -319,29 +283,18 @@ def generate_report_card(serial_no, test_no, student_data):
     """
     components.html(certificate_html, height=720, scrolling=False)
 
-# ===== MAIN SPLIT-SCREEN LAYOUT COLUMNS =====
+# ===== MAIN APPLICATION LAYOUT =====
 left_col, right_col = st.columns([1, 1], gap="small")
 
-# --- LEFT PANEL (Hero Branding & Interactive Canvas) ---
 with left_col:
-    st.markdown("""
-    <div class="left-panel-container">
-    """, unsafe_allow_html=True)
-    
-    st.markdown(f"""
-    <div style="width:100%; display:flex; justify-content:center; position:relative; z-index:2; margin-bottom: 15px;">
-        {SVG_LOGO_CODE}
-    </div>
-    <h1 style="font-size:clamp(24px, 4vw, 36px); font-weight:800; margin:10px 0; position:relative; z-index:2;">Welcome to Student Portal</h1>
-    <p style="font-size:clamp(11px, 2vw, 13px); letter-spacing:1.5px; text-transform:uppercase; opacity:0.9; position:relative; z-index:2;">Govt Boys Higher Secondary School Tando Bago</p>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('<div class="left-hero-panel">', unsafe_allow_html=True)
+    st.markdown(f'<div style="position:relative; z-index:2; width:100%;">{SVG_LOGO_CODE}</div>', unsafe_allow_html=True)
+    st.markdown('<h1 style="font-size:clamp(22px, 3.5vw, 32px); font-weight:800; margin:20px 0 5px 0; position:relative; z-index:2;">Student Results Portal</h1>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size:clamp(10px, 1.8vw, 12px); letter-spacing:1.5px; text-transform:uppercase; color:#facc15; font-weight:700; position:relative; z-index:2; margin:0;">Govt Boys Higher Secondary School Tando Bago</p>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- RIGHT PANEL (Functional Data Entry & Workflow) ---
 with right_col:
-    st.markdown('<div class="right-panel-container">', unsafe_allow_html=True)
-    
+    st.markdown('<div class="right-input-panel">', unsafe_allow_html=True)
     st.subheader("Search Student Record")
     st.caption("Enter exam details to view academic progress certificate")
 
@@ -349,10 +302,8 @@ with right_col:
 
     if test_input:
         cleaned_test = test_input.strip().upper()
-        
         if validate_test_number(cleaned_test):
             file_name = f"{cleaned_test}.xlsx"
-            
             if os.path.exists(file_name):
                 st.success(f"✓ Active Exam Session: {cleaned_test}")
                 
@@ -386,26 +337,16 @@ with right_col:
                 
                 if serial_input:
                     cleaned_serial = serial_input.strip().upper()
-                    
                     try:
                         df = pd.read_excel(file_name)
                         df.columns = df.columns.astype(str).str.strip().str.lower().str.replace(' ', '_')
                         
                         if 'serial_number' in df.columns:
                             result = df[df['serial_number'].astype(str).str.strip().str.upper() == cleaned_serial]
-                            
                             if len(result) > 0:
                                 raw_row = result.iloc[0].to_dict()
-                                student_row = {
-                                    k: ("N/A" if pd.isna(v) else str(v).strip()) 
-                                    for k, v in raw_row.items()
-                                }
-                                
-                                generate_report_card(
-                                    serial_no=cleaned_serial,
-                                    test_no=cleaned_test,
-                                    student_data=student_row
-                                )
+                                student_row = {k: ("N/A" if pd.isna(v) else str(v).strip()) for k, v in raw_row.items()}
+                                generate_report_card(serial_no=cleaned_serial, test_no=cleaned_test, student_data=student_row)
                             else:
                                 st.error(f"❌ Serial Number '{cleaned_serial}' not found in Test {cleaned_test}.")
                         else:
