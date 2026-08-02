@@ -14,266 +14,196 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ===== 100% FULL-SCREEN INTERACTIVE BACKGROUND & 3D LOGO HEADER =====
-full_screen_bg_and_header = """
-<!DOCTYPE html>
-<html>
-<head>
+# ===== INJECT FULL-PAGE CANVAS & EXECUTIVE BRANDING DIRECTLY INTO PARENT DOM =====
+parent_injection_code = """
+<script>
+    (function() {
+        const parentDoc = window.parent.document;
+        
+        // Hide default Streamlit whitespace padding for true full-width feel
+        const mainBlock = parentDoc.querySelector('.main .block-container');
+        if (mainBlock) {
+            mainBlock.style.paddingTop = '1.5rem';
+            mainBlock.style.paddingBottom = '2rem';
+            mainBlock.style.maxWidth = '600px';
+        }
+
+        // Create canvas on the PARENT body if it doesn't exist
+        let canvas = parentDoc.getElementById('global-particle-canvas');
+        if (!canvas) {
+            canvas = parentDoc.createElement('canvas');
+            canvas.id = 'global-particle-canvas';
+            canvas.style.position = 'fixed';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100vw';
+            canvas.style.height = '100vh';
+            canvas.style.zIndex = '-1';
+            canvas.style.pointerEvents = 'none';
+            canvas.style.background = '#06090e';
+            parentDoc.body.appendChild(canvas);
+
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.parent.innerWidth;
+                canvas.height = window.parent.innerHeight;
+            }
+            window.parent.addEventListener('resize', resize);
+            resize();
+
+            const particles = [];
+            const particleCount = Math.min(40, Math.floor(window.parent.innerWidth / 10));
+            let mouse = { x: null, y: null, radius: 140 };
+
+            window.parent.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+
+            window.parent.addEventListener('touchmove', (e) => {
+                if(e.touches.length > 0) {
+                    mouse.x = e.touches[0].clientX;
+                    mouse.y = e.touches[0].clientY;
+                }
+            }, { passive: true });
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.radius = Math.random() * 1.6 + 1;
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+                    if (mouse.x !== null) {
+                        let dx = mouse.x - this.x;
+                        let dy = mouse.y - this.y;
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < mouse.radius) {
+                            let force = (mouse.radius - dist) / mouse.radius;
+                            this.x -= (dx / dist) * force * 2;
+                            this.y -= (dy / dist) * force * 2;
+                        }
+                    }
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(234, 179, 8, 0.75)';
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].draw();
+
+                    for (let j = i + 1; j < particles.length; j++) {
+                        let dx = particles[i].x - particles[j].x;
+                        let dy = particles[i].y - particles[j].y;
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < 115) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(234, 179, 8, ${0.2 * (1 - dist / 115)})`;
+                            ctx.lineWidth = 0.6;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+    })();
+</script>
+"""
+components.html(parent_injection_code, height=0)
+
+# ===== EXECUTIVE BRANDING HEADER (NATIVE STREAMLIT COMPONENT) =====
+st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800&family=Playfair+Display:wght@700;800&family=Space+Mono:wght@700&family=Inter:wght@400;600;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:wght@700;800&family=Space+Mono:wght@700&family=Inter:wght@400;600&display=swap');
 
-    html, body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        background: #06090e;
-        overflow: hidden;
-        font-family: 'Inter', system-ui, sans-serif;
-    }
-
-    /* Fixed Fullscreen Canvas Background */
-    #particle-canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: 0;
-        pointer-events: auto;
-    }
-
-    /* Header Container Floating Above Canvas */
-    .header-container {
-        position: relative;
-        z-index: 10;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 25px 15px 10px 15px;
+    .portal-header {
         text-align: center;
-        pointer-events: none;
-        perspective: 1000px;
+        padding: 10px 0 20px 0;
     }
 
-    /* 3D Glass Emblem Base */
-    .logo-3d-wrapper {
-        position: relative;
-        width: 95px;
-        height: 95px;
-        margin-bottom: 12px;
-        transform-style: preserve-3d;
-        transform: rotateX(15deg) rotateY(-8deg);
-        transition: transform 0.5s ease;
-    }
-
-    /* 3D Drop Shadow Base Layer */
-    .logo-3d-shadow {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: rgba(234, 179, 8, 0.15);
-        border-radius: 22px;
-        transform: translateZ(-18px) scale(0.92);
-        filter: blur(8px);
-    }
-
-    /* Glassmorphism Back Plate */
-    .logo-3d-backplate {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
-        border-radius: 22px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-        transform: translateZ(0px);
-    }
-
-    /* Floating Gold Rim Frame */
-    .logo-3d-frame {
-        position: absolute;
-        top: 6px;
-        left: 6px;
-        right: 6px;
-        bottom: 6px;
-        border-radius: 16px;
-        border: 2px solid #eab308;
-        box-shadow: 0 0 15px rgba(234, 179, 8, 0.4), inset 0 0 10px rgba(234, 179, 8, 0.2);
-        transform: translateZ(12px);
-    }
-
-    /* Raised Metallic 3D Monogram */
-    .logo-3d-content {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
+    /* Professional Executive Crest Logo */
+    .brand-crest {
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        transform: translateZ(25px);
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        border: 1.5px solid #eab308;
+        background: radial-gradient(circle, rgba(30, 41, 59, 0.8) 0%, rgba(6, 9, 14, 0.95) 100%);
+        box-shadow: 0 0 25px rgba(234, 179, 8, 0.25), inset 0 0 10px rgba(234, 179, 8, 0.15);
+        margin-bottom: 12px;
     }
 
-    .ml-text-3d {
+    .brand-initials {
         font-family: 'Cinzel', serif;
-        font-size: 34px;
-        font-weight: 800;
-        background: linear-gradient(180deg, #ffffff 0%, #facc15 65%, #ca8a04 100%);
+        font-size: 28px;
+        font-weight: 900;
+        background: linear-gradient(180deg, #ffffff 0%, #facc15 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        line-height: 1;
-        letter-spacing: 1.5px;
-    }
-
-    .ml-sub-3d {
-        font-family: 'Space Mono', monospace;
-        font-size: 7px;
-        color: #eab308;
         letter-spacing: 2px;
-        margin-top: 3px;
-        text-transform: uppercase;
-        font-weight: 700;
+        line-height: 1;
     }
 
-    .portal-title {
+    .main-title {
         font-family: 'Playfair Display', serif;
         color: #ffffff;
-        font-size: 22px;
+        font-size: 24px;
         font-weight: 800;
-        letter-spacing: 2px;
+        letter-spacing: 2.5px;
         text-transform: uppercase;
-        margin: 8px 0 2px 0;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        margin: 0;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.9);
     }
 
-    .portal-subtitle {
+    .sub-title {
         font-family: 'Space Mono', monospace;
         color: #eab308;
         font-size: 10px;
         letter-spacing: 2px;
         text-transform: uppercase;
-        opacity: 0.95;
+        margin-top: 6px;
+        font-weight: 700;
     }
 </style>
-</head>
-<body>
-    <canvas id="particle-canvas"></canvas>
-    
-    <div class="header-container">
-        <div class="logo-3d-wrapper">
-            <div class="logo-3d-shadow"></div>
-            <div class="logo-3d-backplate"></div>
-            <div class="logo-3d-frame"></div>
-            <div class="logo-3d-content">
-                <div class="ml-text-3d">ML</div>
-                <div class="ml-sub-3d">LOHANA</div>
-            </div>
-        </div>
-        <div class="portal-title">Student Results Portal</div>
-        <div class="portal-subtitle">Govt Boys Higher Secondary School Tando Bago</div>
+
+<div class="portal-header">
+    <div class="brand-crest">
+        <span class="brand-initials">ML</span>
     </div>
-
-    <script>
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        // Mobile-Optimized Particle System
-        const particles = [];
-        const particleCount = Math.min(35, Math.floor(window.innerWidth / 12));
-        let mouse = { x: null, y: null, radius: 120 };
-
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.x;
-            mouse.y = e.y;
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if(e.touches.length > 0) {
-                mouse.x = e.touches[0].clientX;
-                mouse.y = e.touches[0].clientY;
-            }
-        }, { passive: true });
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.6;
-                this.vy = (Math.random() - 0.5) * 0.6;
-                this.radius = Math.random() * 1.8 + 1;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-
-                if (mouse.x !== null) {
-                    let dx = mouse.x - this.x;
-                    let dy = mouse.y - this.y;
-                    let dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < mouse.radius) {
-                        let force = (mouse.radius - dist) / mouse.radius;
-                        this.x -= (dx / dist) * force * 2;
-                        this.y -= (dy / dist) * force * 2;
-                    }
-                }
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = '#eab308';
-                ctx.fill();
-            }
-        }
-
-        for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-                particles[i].draw();
-
-                for (let j = i + 1; j < particles.length; j++) {
-                    let dx = particles[i].x - particles[j].x;
-                    let dy = particles[i].y - particles[j].y;
-                    let dist = Math.sqrt(dx * dx + dy * dy);
-
-                    if (dist < 110) {
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(234, 179, 8, ${0.25 * (1 - dist / 110)})`;
-                        ctx.lineWidth = 0.7;
-                        ctx.stroke();
-                    }
-                }
-            }
-            requestAnimationFrame(animate);
-        }
-        animate();
-    </script>
-</body>
-</html>
-"""
-components.html(full_screen_bg_and_header, height=230)
+    <div class="main-title">Student Results Portal</div>
+    <div class="sub-title">Govt Boys Higher Secondary School Tando Bago</div>
+</div>
+""", unsafe_allow_html=true)
 
 # ===== UTILITY FUNCTIONS =====
 def validate_test_number(test_no):
@@ -298,7 +228,7 @@ def format_percentage(val):
     except Exception:
         return "0%", 0.0
 
-# ===== HIGH-END ACADEMIC MARKSHEET GENERATOR =====
+# ===== FULL-PAGE DYNAMIC MARKSHEET GENERATOR =====
 def generate_report_card(serial_no, test_no, student_data):
     name = student_data.get('name', 'N/A')
     father_name = student_data.get('father_name', 'N/A')
@@ -327,31 +257,27 @@ def generate_report_card(serial_no, test_no, student_data):
             body {{
                 background-color: transparent;
                 font-family: 'Inter', system-ui, sans-serif;
-                display: flex;
-                justify-content: center;
                 margin: 0;
-                padding: 10px 0;
+                padding: 0;
             }}
 
             .marksheet-card {{
                 background: linear-gradient(165deg, #0e1422 0%, #070a12 100%);
                 color: #ffffff;
                 width: 100%;
-                max-width: 520px;
                 border: 1px solid #1e293b;
                 border-radius: 16px;
-                padding: 28px;
+                padding: 24px;
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
-                position: relative;
             }}
 
             .card-top {{
                 border-bottom: 1px solid #1e293b;
-                padding-bottom: 16px;
-                margin-bottom: 20px;
+                padding-bottom: 14px;
+                margin-bottom: 18px;
             }}
 
-            .sub-title {{
+            .card-sub-title {{
                 font-family: 'Space Mono', monospace;
                 color: #eab308;
                 font-size: 9px;
@@ -361,7 +287,7 @@ def generate_report_card(serial_no, test_no, student_data):
 
             .student-headline {{
                 font-family: 'Playfair Display', serif;
-                font-size: 26px;
+                font-size: 24px;
                 font-weight: 900;
                 color: #ffffff;
                 margin: 4px 0 2px 0;
@@ -376,18 +302,15 @@ def generate_report_card(serial_no, test_no, student_data):
             .metric-dashboard {{
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 12px;
-                margin-bottom: 20px;
+                gap: 10px;
+                margin-bottom: 16px;
             }}
 
             .metric-card {{
                 background: rgba(20, 27, 45, 0.7);
                 border: 1px solid #1e293b;
                 border-radius: 10px;
-                padding: 14px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
+                padding: 12px;
             }}
 
             .metric-label {{
@@ -401,7 +324,7 @@ def generate_report_card(serial_no, test_no, student_data):
             .metric-val {{
                 font-family: 'Playfair Display', serif;
                 color: #facc15;
-                font-size: 26px;
+                font-size: 24px;
                 font-weight: 800;
                 margin-top: 2px;
             }}
@@ -409,15 +332,15 @@ def generate_report_card(serial_no, test_no, student_data):
             .details-grid {{
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 10px;
-                margin-bottom: 20px;
+                gap: 8px;
+                margin-bottom: 18px;
             }}
 
             .grid-item {{
                 background: rgba(15, 22, 35, 0.8);
                 border: 1px solid rgba(255, 255, 255, 0.05);
                 border-left: 3px solid #eab308;
-                padding: 10px 12px;
+                padding: 8px 10px;
                 border-radius: 6px;
             }}
 
@@ -432,7 +355,7 @@ def generate_report_card(serial_no, test_no, student_data):
 
             .item-val {{
                 color: #ffffff;
-                font-size: 13px;
+                font-size: 12px;
                 font-weight: 700;
                 margin-top: 2px;
             }}
@@ -441,27 +364,26 @@ def generate_report_card(serial_no, test_no, student_data):
                 background: rgba(15, 22, 35, 0.8);
                 border: 1px solid #1e293b;
                 border-radius: 12px;
-                padding: 16px;
+                padding: 14px;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin-bottom: 22px;
+                margin-bottom: 18px;
             }}
 
             .circular-gauge {{
-                width: 72px;
-                height: 72px;
+                width: 65px;
+                height: 65px;
                 border-radius: 50%;
                 background: conic-gradient(#facc15 {pct_num * 3.6}deg, #1e293b 0deg);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0 0 15px rgba(250, 204, 21, 0.2);
             }}
 
             .gauge-center {{
-                width: 58px;
-                height: 58px;
+                width: 51px;
+                height: 51px;
                 background: #080c14;
                 border-radius: 50%;
                 display: flex;
@@ -473,12 +395,12 @@ def generate_report_card(serial_no, test_no, student_data):
             .gauge-score {{
                 color: #ffffff;
                 font-weight: 800;
-                font-size: 14px;
+                font-size: 13px;
             }}
 
             .gauge-sub {{
                 color: #eab308;
-                font-size: 7px;
+                font-size: 6.5px;
                 font-family: 'Space Mono', monospace;
             }}
 
@@ -486,7 +408,7 @@ def generate_report_card(serial_no, test_no, student_data):
                 background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
                 color: #000000;
                 border: none;
-                padding: 14px;
+                padding: 12px;
                 font-family: 'Space Mono', monospace;
                 font-weight: 700;
                 font-size: 11px;
@@ -516,7 +438,7 @@ def generate_report_card(serial_no, test_no, student_data):
     <body>
         <div class="marksheet-card">
             <div class="card-top">
-                <span class="sub-title">OFFICIAL ACADEMIC PROGRESS REPORT</span>
+                <span class="card-sub-title">OFFICIAL ACADEMIC PROGRESS REPORT</span>
                 <div class="student-headline">{name}</div>
                 <div class="academic-meta">Father's Name: {father_name} · Class {cls}-{section} · Seat No: {roll_no}</div>
             </div>
@@ -553,9 +475,9 @@ def generate_report_card(serial_no, test_no, student_data):
 
             <div class="accuracy-section">
                 <div>
-                    <div style="font-family: 'Space Mono', monospace; color: #94a3b8; font-size: 9px; text-transform: uppercase;">Performance Accuracy</div>
-                    <div style="color: #ffffff; font-size: 16px; font-weight: 800; margin-top: 2px;">Subject Mastery Level</div>
-                    <div style="color: #eab308; font-size: 11px; margin-top: 2px; font-weight: 600;">Status: Verified Record</div>
+                    <div style="font-family: 'Space Mono', monospace; color: #94a3b8; font-size: 8.5px; text-transform: uppercase;">Performance Accuracy</div>
+                    <div style="color: #ffffff; font-size: 15px; font-weight: 800; margin-top: 2px;">Subject Mastery Level</div>
+                    <div style="color: #eab308; font-size: 10.5px; margin-top: 2px; font-weight: 600;">Status: Verified Record</div>
                 </div>
                 <div class="circular-gauge">
                     <div class="gauge-center">
@@ -570,7 +492,7 @@ def generate_report_card(serial_no, test_no, student_data):
     </body>
     </html>
     """
-    components.html(card_html, height=620)
+    components.html(card_html, height=560, scrolling=False)
 
 # ===== MAIN APPLICATION WORKFLOW =====
 test_input = st.text_input("Enter Test Code:", placeholder="e.g., A4-25-01")
