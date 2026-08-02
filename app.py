@@ -166,15 +166,26 @@ def render_certificate(serial_no, test_no, data):
     FIXED: Escaped all user-controlled strings to prevent XSS
     """
     # Extract and sanitize all data fields
-    name = escape(str(data.get('name', 'N/A')))
-    father_name = escape(str(data.get('father_name', 'N/A')))
-    roll_no = escape(str(data.get('roll_no', 'N/A')))
-    score = escape(str(data.get('test_score', '0')))
-    subject = escape(str(data.get('subject', 'General Evaluation')))
+    name = escape(str(data.get('name', 'N/A')).strip())
+    father_name = escape(str(data.get('father_name', 'N/A')).strip())
+    roll_no = escape(str(data.get('roll_no', 'N/A')).strip())
+    score = escape(str(data.get('test_score', '0')).strip())
+    
+    # Sanitize subject - remove extra whitespace
+    subject_raw = str(data.get('subject', 'General Evaluation')).strip()
+    subject_raw = re.sub(r'\s+', ' ', subject_raw)  # Collapse multiple spaces
+    subject = escape(subject_raw[:30])  # Limit to 30 chars
+    
     percentage = normalize_percentage(data.get('percentage', '0'))  # Returns safe percentage
-    cls = escape(str(data.get('class', 'N/A')))
-    rank = escape(str(data.get('class_rank', 'N/A')))
-    section = escape(str(data.get('section', 'A')))
+    cls = escape(str(data.get('class', 'N/A')).strip())
+    
+    # CRITICAL FIX: Clean rank field - remove non-numeric/non-special chars
+    rank_raw = str(data.get('class_rank', 'N/A')).strip()
+    rank_raw = re.sub(r'[^\d\-#]', '', rank_raw)  # Keep only numbers, dash, hash
+    rank_raw = rank_raw[:10]  # Limit to 10 chars max
+    rank = escape(rank_raw if rank_raw else 'N/A')
+    
+    section = escape(str(data.get('section', 'A')).strip()[:2])
 
     # Extract numeric value from percentage for progress bar width
     pct_num = int(percentage.rstrip('%'))
@@ -190,7 +201,6 @@ def render_certificate(serial_no, test_no, data):
             body {{ margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; background: #020617; color: #f8fafc; }}
             .page-container {{
                 width: 210mm;
-                height: 297mm;
                 max-width: 100%;
                 margin: 0 auto;
                 background: linear-gradient(135deg, #090d16 0%, #1e1b4b 100%);
@@ -199,26 +209,163 @@ def render_certificate(serial_no, test_no, data):
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
+                box-sizing: border-box;
+            }}
+            @media (max-width: 600px) {{
+                .page-container {{
+                    border: 2px solid #38bdf8;
+                    padding: 20px;
+                }}
             }}
             .cert-header {{ text-align: center; }}
-            .org-title {{ font-size: 13px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; margin-top: 10px; }}
-            .doc-title {{ font-size: 24px; font-weight: 800; color: #ffffff; margin-top: 6px; }}
+            .org-title {{ 
+                font-size: 13px; 
+                font-weight: 700; 
+                color: #38bdf8; 
+                text-transform: uppercase; 
+                letter-spacing: 2px; 
+                margin-top: 10px;
+                word-wrap: break-word;
+            }}
+            .doc-title {{ 
+                font-size: 24px; 
+                font-weight: 800; 
+                color: #ffffff; 
+                margin-top: 6px;
+                word-wrap: break-word;
+            }}
+            @media (max-width: 600px) {{
+                .org-title {{ font-size: 11px; letter-spacing: 1px; }}
+                .doc-title {{ font-size: 20px; }}
+            }}
             
-            .identity-box {{ background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 20px; text-align: center; margin: 20px 0; }}
-            .student-name {{ font-size: 26px; font-weight: 700; color: #38bdf8; margin-bottom: 6px; word-break: break-word; }}
-            .student-sub {{ font-size: 13px; color: #94a3b8; }}
+            .identity-box {{ 
+                background: rgba(15, 23, 42, 0.85); 
+                border: 1px solid rgba(56, 189, 248, 0.25); 
+                border-radius: 10px; 
+                padding: 20px; 
+                text-align: center; 
+                margin: 20px 0;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }}
+            .student-name {{ 
+                font-size: 26px; 
+                font-weight: 700; 
+                color: #38bdf8; 
+                margin-bottom: 6px; 
+                word-wrap: break-word;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                line-height: 1.3;
+            }}
+            .student-sub {{ 
+                font-size: 13px; 
+                color: #94a3b8;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                line-height: 1.4;
+            }}
+            @media (max-width: 600px) {{
+                .student-name {{ font-size: 22px; }}
+                .student-sub {{ font-size: 11px; }}
+            }}
             
-            .metrics-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }}
-            .metric-card {{ background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 14px; text-align: center; }}
-            .metric-val {{ font-size: 20px; font-weight: 700; color: #38bdf8; word-break: break-word; }}
-            .metric-lbl {{ font-size: 9px; color: #64748b; text-transform: uppercase; margin-top: 4px; }}
+            .metrics-grid {{ 
+                display: grid; 
+                grid-template-columns: repeat(4, 1fr); 
+                gap: 12px; 
+                margin: 20px 0;
+            }}
+            .metric-card {{ 
+                background: #0f172a; 
+                border: 1px solid #1e293b; 
+                border-radius: 8px; 
+                padding: 14px; 
+                text-align: center;
+                min-width: 0;
+                word-wrap: break-word;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }}
+            .metric-val {{ 
+                font-size: 18px; 
+                font-weight: 700; 
+                color: #38bdf8; 
+                word-wrap: break-word;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                max-width: 100%;
+                white-space: normal;
+                line-height: 1.2;
+            }}
+            .metric-lbl {{ 
+                font-size: 9px; 
+                color: #64748b; 
+                text-transform: uppercase; 
+                margin-top: 4px;
+                word-wrap: break-word;
+            }}
+            @media (max-width: 900px) {{
+                .metrics-grid {{ grid-template-columns: repeat(2, 1fr); }}
+            }}
+            @media (max-width: 600px) {{
+                .metrics-grid {{ grid-template-columns: repeat(2, 1fr); gap: 8px; }}
+                .metric-card {{ padding: 10px; }}
+                .metric-val {{ font-size: 16px; }}
+                .metric-lbl {{ font-size: 8px; }}
+            }}
             
-            .analytics-box {{ background: rgba(15, 23, 42, 0.5); border: 1px solid #1e293b; border-radius: 10px; padding: 18px; margin: 15px 0; }}
-            .analytics-label {{ font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px; text-transform: uppercase; }}
-            .progress-track {{ background: #1e293b; border-radius: 4px; height: 12px; width: 100%; overflow: hidden; }}
+            .analytics-box {{ 
+                background: rgba(15, 23, 42, 0.5); 
+                border: 1px solid #1e293b; 
+                border-radius: 10px; 
+                padding: 18px; 
+                margin: 15px 0;
+            }}
+            .analytics-label {{ 
+                font-size: 12px; 
+                font-weight: 600; 
+                color: #cbd5e1; 
+                margin-bottom: 8px; 
+                text-transform: uppercase;
+                word-wrap: break-word;
+            }}
+            .progress-track {{ 
+                background: #1e293b; 
+                border-radius: 4px; 
+                height: 12px; 
+                width: 100%; 
+                overflow: hidden;
+                min-height: 10px;
+            }}
+            @media (max-width: 600px) {{
+                .analytics-box {{ padding: 14px; margin: 12px 0; }}
+                .analytics-label {{ font-size: 10px; }}
+            }}
             .progress-fill {{ background: linear-gradient(90deg, #0284c7, #38bdf8); height: 100%; width: {pct_num}%; border-radius: 4px; transition: width 0.3s ease; }}
             
-            .footer-meta {{ display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; padding-top: 15px; flex-wrap: wrap; gap: 8px; }}
+            .footer-meta {{ 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center; 
+                font-size: 11px; 
+                color: #64748b; 
+                border-top: 1px solid #1e293b; 
+                padding-top: 15px; 
+                flex-wrap: wrap; 
+                gap: 8px;
+                word-wrap: break-word;
+            }}
+            @media (max-width: 600px) {{
+                .footer-meta {{ 
+                    flex-direction: column;
+                    align-items: flex-start;
+                    font-size: 10px;
+                    gap: 6px;
+                }}
+            }}
             .print-action-btn {{ background: #38bdf8; color: #020617; border: none; padding: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-size: 13px; width: 100%; margin-top: 15px; }}
             
             @media print {{
