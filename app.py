@@ -265,7 +265,8 @@ def render_certificate(serial_no, test_no, data):
     </body>
     </html>
     """
-    components.html(cert_html, height=720, scrolling=False)
+    # Use full height to render complete A4 certificate + scrolling for mobile
+    components.html(cert_html, height=1400, scrolling=True)
 
 # ===== STRUCTURAL CONTAINER VIEW =====
 sidebar_col, main_col = st.columns([1, 1], gap="small")
