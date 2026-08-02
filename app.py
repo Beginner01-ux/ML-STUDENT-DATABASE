@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ===== INJECT SPLIT-SCREEN LAYOUT & LEFT CANVAS =====
+# ===== INJECT SPLIT-SCREEN LAYOUT & CANVAS =====
 split_layout_html = """
 <script>
     (function() {
@@ -52,11 +52,11 @@ split_layout_html = """
             window.parent.addEventListener('resize', resize);
             resize();
 
-            // Interactive 3D Molecules, Nodes, & Floating Academic Glyphs
+            // Interactive 3D Molecules, Nodes, & Glyphs
             const elements = [];
             const glyphs = ['α', 'β', 'Ω', '∫', 'æ', 'θ', 'λ', '∑', 'ð'];
-            const elementCount = 42;
-            let mouse = { x: null, y: null, radius: 150 };
+            const elementCount = 40;
+            let mouse = { x: null, y: null, radius: 140 };
 
             window.parent.addEventListener('mousemove', (e) => {
                 if (e.clientX <= window.parent.innerWidth * 0.5) {
@@ -106,7 +106,7 @@ split_layout_html = """
                     ctx.rotate(this.angle);
 
                     if (this.type === 0) {
-                        // Interactive Node
+                        // Node
                         ctx.beginPath();
                         ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
                         ctx.fillStyle = 'rgba(250, 204, 21, 0.85)';
@@ -114,7 +114,7 @@ split_layout_html = """
                         ctx.shadowColor = '#facc15';
                         ctx.fill();
                     } else if (this.type === 1) {
-                        // 3D Molecular Structure
+                        // 3D Molecule
                         ctx.beginPath();
                         ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
                         ctx.fillStyle = 'rgba(244, 63, 94, 0.9)';
@@ -138,7 +138,7 @@ split_layout_html = """
                             ctx.fill();
                         }
                     } else {
-                        // Floating Glyph
+                        // Language Glyph
                         ctx.font = '14px Space Mono, monospace';
                         ctx.fillStyle = 'rgba(192, 132, 252, 0.7)';
                         ctx.fillText(this.glyph, 0, 0);
@@ -188,12 +188,12 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
 
-    /* Dark Theme Background */
+    /* Global Dark Theme */
     [data-testid="stAppViewContainer"] {
         background-color: #030712;
     }
 
-    /* Left Hero Panel */
+    /* Left Hero Visual Card Styling */
     .left-hero-container {
         display: flex;
         flex-direction: column;
@@ -245,7 +245,7 @@ st.markdown("""
         margin-top: 8px;
     }
 
-    /* Right Form Container Card */
+    /* Right Form Container Styling */
     .right-portal-card {
         background: #0b1329;
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -269,7 +269,7 @@ st.markdown("""
         margin-bottom: 24px;
     }
 
-    /* Input Overrides */
+    /* Streamlit Input Overrides */
     .stTextInput > div > div {
         background-color: rgba(15, 23, 42, 0.9) !important;
         border: 1px solid rgba(255, 255, 255, 0.12) !important;
