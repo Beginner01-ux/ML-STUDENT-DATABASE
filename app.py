@@ -8,19 +8,98 @@ import streamlit.components.v1 as components
 
 # ===== PAGE CONFIGURATION =====
 st.set_page_config(
-    page_title="Student Results Portal | ML",
+    page_title="Student Results Portal | Manish Lohana",
     page_icon="",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# ===== INJECT SPLIT-SCREEN LAYOUT & LEFT CANVAS =====
-split_layout_html = """
+# ===== INLINE SVG VECTOR LOGO (MANISH LOHANA CREST) =====
+MANISH_LOHANA_SVG_LOGO = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 310" class="vector-logo-svg">
+  <defs>
+    <!-- Metallic Gold Gradient -->
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF099" />
+      <stop offset="30%" stop-color="#FACC15" />
+      <stop offset="70%" stop-color="#EAB308" />
+      <stop offset="100%" stop-color="#A16207" />
+    </linearGradient>
+    
+    <linearGradient id="goldBright" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#CA8A04" />
+      <stop offset="50%" stop-color="#FDE047" />
+      <stop offset="100%" stop-color="#FEF08A" />
+    </linearGradient>
+
+    <!-- Subtle Glow Filter -->
+    <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Top Diamond Finial Accent -->
+  <polygon points="150,8 159,20 150,32 141,20" fill="url(#goldGradient)" filter="url(#goldGlow)"/>
+
+  <!-- Main Outer Book/Shield Frame -->
+  <path d="M 150,42 
+           L 40,90 
+           L 40,205 
+           L 150,265 
+           L 260,205 
+           L 260,90 
+           Z 
+           M 150,66 
+           L 242,106 
+           L 242,194 
+           L 150,244 
+           L 58,194 
+           L 58,106 
+           Z" 
+        fill="url(#goldGradient)" 
+        fill-rule="evenodd" filter="url(#goldGlow)"/>
+
+  <!-- Central Vertical Spine Line -->
+  <line x1="150" y1="42" x2="150" y2="244" stroke="url(#goldGradient)" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Left Inner "M" Geometry -->
+  <path d="M 72,110 L 96,110 L 96,178 L 115,142 L 132,178 L 132,110 L 145,110 L 145,198 L 132,198 L 115,164 L 98,198 L 72,198 Z" 
+        fill="url(#goldBright)"/>
+
+  <!-- Right Inner "L" Geometry -->
+  <path d="M 174,110 L 194,110 L 194,180 L 232,180 L 232,198 L 174,198 Z" 
+        fill="url(#goldBright)"/>
+
+  <!-- Angled Text "MANISH" (Left Lower Frame) -->
+  <g transform="translate(150, 260) rotate(-28.5)">
+    <text x="-95" y="15" 
+          font-family="'Space Grotesk', 'Arial Black', sans-serif" 
+          font-weight="900" 
+          font-size="18" 
+          fill="#FFFFFF" 
+          letter-spacing="2">MANISH</text>
+  </g>
+
+  <!-- Angled Text "LOHANA" (Right Lower Frame) -->
+  <g transform="translate(150, 260) rotate(28.5)">
+    <text x="18" y="15" 
+          font-family="'Space Grotesk', 'Arial Black', sans-serif" 
+          font-weight="900" 
+          font-size="18" 
+          fill="#FFFFFF" 
+          letter-spacing="2">LOHANA</text>
+  </g>
+</svg>
+"""
+
+# ===== INJECT DYNAMIC RESPONSIVE CANVAS SCRIPT =====
+responsive_canvas_html = """
 <script>
     (function() {
         const parentDoc = window.parent.document;
 
-        // Force Streamlit body to full-width split container
+        // Force Streamlit body to dynamic responsive container
         const mainBlock = parentDoc.querySelector('.main .block-container');
         if (mainBlock) {
             mainBlock.style.maxWidth = '100vw';
@@ -28,16 +107,14 @@ split_layout_html = """
             mainBlock.style.margin = '0';
         }
 
-        // Create background canvas for Left 50% Visual Area
-        let canvas = parentDoc.getElementById('split-canvas-bg');
+        // Background canvas for interactive left side floating particles & nodes
+        let canvas = parentDoc.getElementById('responsive-canvas-bg');
         if (!canvas) {
             canvas = parentDoc.createElement('canvas');
-            canvas.id = 'split-canvas-bg';
+            canvas.id = 'responsive-canvas-bg';
             canvas.style.position = 'fixed';
             canvas.style.top = '0';
             canvas.style.left = '0';
-            canvas.style.width = '50vw';
-            canvas.style.height = '100vh';
             canvas.style.zIndex = '0';
             canvas.style.pointerEvents = 'none';
             canvas.style.background = 'radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%)';
@@ -46,34 +123,34 @@ split_layout_html = """
             const ctx = canvas.getContext('2d');
 
             function resize() {
-                canvas.width = window.parent.innerWidth * 0.5;
+                const width = window.parent.innerWidth;
+                if (width > 768) {
+                    canvas.width = width * 0.5; // Exactly left 50% on Desktop
+                } else {
+                    canvas.width = width;       // 100% full width on Mobile
+                }
                 canvas.height = window.parent.innerHeight;
             }
             window.parent.addEventListener('resize', resize);
             resize();
 
-            // Interactive 3D Molecules, Nodes, & Floating Academic Glyphs
+            // Interactive Floating Physics Elements (Glyphs & Molecular Nodes)
             const elements = [];
-            const glyphs = ['α', 'β', 'Ω', '∫', 'æ', 'θ', 'λ', '∑', 'ð'];
+            const glyphs = ['α', 'β', 'Ω', '∫', 'æ', 'θ', 'λ', '∑', 'ð', 'π', 'Δ'];
             const elementCount = 42;
-            let mouse = { x: null, y: null, radius: 150 };
+            let mouse = { x: null, y: null, radius: 140 };
 
             window.parent.addEventListener('mousemove', (e) => {
-                if (e.clientX <= window.parent.innerWidth * 0.5) {
-                    mouse.x = e.clientX;
-                    mouse.y = e.clientY;
-                } else {
-                    mouse.x = null;
-                    mouse.y = null;
-                }
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
             });
 
             class FloatingElement {
                 constructor() {
                     this.x = Math.random() * canvas.width;
                     this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 0.6;
-                    this.vy = (Math.random() - 0.5) * 0.6;
+                    this.vx = (Math.random() - 0.5) * 0.7;
+                    this.vy = (Math.random() - 0.5) * 0.7;
                     this.type = Math.floor(Math.random() * 3);
                     this.glyph = glyphs[Math.floor(Math.random() * glyphs.length)];
                     this.angle = Math.random() * Math.PI * 2;
@@ -94,8 +171,8 @@ split_layout_html = """
                         let dist = Math.sqrt(dx * dx + dy * dy);
                         if (dist < mouse.radius) {
                             let force = (mouse.radius - dist) / mouse.radius;
-                            this.x -= (dx / dist) * force * 2;
-                            this.y -= (dy / dist) * force * 2;
+                            this.x -= (dx / dist) * force * 2.5;
+                            this.y -= (dy / dist) * force * 2.5;
                         }
                     }
                 }
@@ -106,7 +183,6 @@ split_layout_html = """
                     ctx.rotate(this.angle);
 
                     if (this.type === 0) {
-                        // Interactive Node
                         ctx.beginPath();
                         ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
                         ctx.fillStyle = 'rgba(250, 204, 21, 0.85)';
@@ -114,7 +190,6 @@ split_layout_html = """
                         ctx.shadowColor = '#facc15';
                         ctx.fill();
                     } else if (this.type === 1) {
-                        // 3D Molecular Structure
                         ctx.beginPath();
                         ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
                         ctx.fillStyle = 'rgba(244, 63, 94, 0.9)';
@@ -138,9 +213,8 @@ split_layout_html = """
                             ctx.fill();
                         }
                     } else {
-                        // Floating Glyph
-                        ctx.font = '14px Space Mono, monospace';
-                        ctx.fillStyle = 'rgba(192, 132, 252, 0.7)';
+                        ctx.font = '15px Space Mono, monospace';
+                        ctx.fillStyle = 'rgba(192, 132, 252, 0.75)';
                         ctx.fillText(this.glyph, 0, 0);
                     }
 
@@ -164,11 +238,11 @@ split_layout_html = """
                         let dy = elements[i].y - elements[j].y;
                         let dist = Math.sqrt(dx * dx + dy * dy);
 
-                        if (dist < 110) {
+                        if (dist < 100) {
                             ctx.beginPath();
                             ctx.moveTo(elements[i].x, elements[i].y);
                             ctx.lineTo(elements[j].x, elements[j].y);
-                            ctx.strokeStyle = `rgba(250, 204, 21, ${0.15 * (1 - dist / 110)})`;
+                            ctx.strokeStyle = `rgba(250, 204, 21, ${0.15 * (1 - dist / 100)})`;
                             ctx.lineWidth = 0.5;
                             ctx.stroke();
                         }
@@ -181,19 +255,19 @@ split_layout_html = """
     })();
 </script>
 """
-components.html(split_layout_html, height=0)
+components.html(responsive_canvas_html, height=0)
 
-# ===== GLOBAL STYLING OVERRIDES =====
+# ===== GLOBAL RESPONSIVE STYLING (CSS) =====
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;900&display=swap');
 
-    /* Dark Theme Background */
     [data-testid="stAppViewContainer"] {
         background-color: #030712;
+        overflow-x: hidden;
     }
 
-    /* Left Hero Panel */
+    /* Left Interactive Hero Panel Container */
     .left-hero-container {
         display: flex;
         flex-direction: column;
@@ -201,35 +275,35 @@ st.markdown("""
         justify-content: center;
         min-height: 85vh;
         text-align: center;
-        padding: 40px;
+        padding: 20px;
+        position: relative;
+        z-index: 1;
     }
 
-    .hero-circle-accent {
+    /* Dynamic Vector Logo Box */
+    .logo-hero-box {
         width: 220px;
         height: 220px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.9) 100%);
-        border: 2px solid #facc15;
-        box-shadow: 0 0 50px rgba(250, 204, 21, 0.25), inset 0 0 20px rgba(250, 204, 21, 0.15);
         display: flex;
         align-items: center;
         justify-content: center;
         margin-bottom: 24px;
-        z-index: 2;
+        filter: drop-shadow(0px 10px 25px rgba(250, 204, 21, 0.35));
+        transition: transform 0.3s ease;
     }
 
-    .hero-logo-text {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 72px;
-        font-weight: 700;
-        color: #facc15;
-        letter-spacing: 2px;
-        text-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+    .logo-hero-box:hover {
+        transform: scale(1.06);
+    }
+
+    .vector-logo-svg {
+        width: 100%;
+        height: 100%;
     }
 
     .hero-title {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 32px;
+        font-size: 28px;
         font-weight: 700;
         color: #ffffff;
         letter-spacing: -0.5px;
@@ -238,26 +312,28 @@ st.markdown("""
 
     .hero-subtitle {
         color: #94a3b8;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 2px;
-        margin-top: 8px;
+        margin-top: 6px;
     }
 
-    /* Right Form Container Card */
+    /* Right Portal Search Card */
     .right-portal-card {
         background: #0b1329;
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 20px;
-        padding: 32px;
+        padding: 28px;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
         margin-top: 20px;
+        position: relative;
+        z-index: 1;
     }
 
     .form-header-title {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 700;
         color: #ffffff;
         margin-bottom: 4px;
@@ -266,10 +342,10 @@ st.markdown("""
     .form-header-sub {
         font-size: 12px;
         color: #64748b;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }
 
-    /* Input Overrides */
+    /* Custom Input Controls */
     .stTextInput > div > div {
         background-color: rgba(15, 23, 42, 0.9) !important;
         border: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -294,6 +370,37 @@ st.markdown("""
         background-color: #facc15 !important;
         color: #000000 !important;
         font-weight: 700 !important;
+    }
+
+    /* Mobile Responsive Rules */
+    @media screen and (max-width: 768px) {
+        .left-hero-container {
+            min-height: auto;
+            padding: 20px 10px 10px 10px;
+        }
+
+        .logo-hero-box {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 14px;
+        }
+
+        .hero-title {
+            font-size: 20px;
+        }
+
+        .hero-subtitle {
+            font-size: 10px;
+        }
+
+        .right-portal-card {
+            padding: 18px 14px;
+            margin-top: 10px;
+        }
+
+        #responsive-canvas-bg {
+            width: 100vw !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -321,7 +428,7 @@ def format_percentage(val):
     except Exception:
         return "0%", 0.0
 
-# ===== A4 CERTIFICATE & MARKSHEET GENERATOR =====
+# ===== A4 CERTIFICATE & FULL-PAGE MARKSHEET GENERATOR =====
 def generate_report_card(serial_no, test_no, student_data):
     name = student_data.get('name', 'N/A')
     father_name = student_data.get('father_name', 'N/A')
@@ -337,8 +444,9 @@ def generate_report_card(serial_no, test_no, student_data):
     <!DOCTYPE html>
     <html>
     <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;900&display=swap');
 
             * {{
                 -webkit-print-color-adjust: exact !important;
@@ -364,43 +472,33 @@ def generate_report_card(serial_no, test_no, student_data):
                 width: 100%;
                 border: 2px solid #ca8a04;
                 border-radius: 16px;
-                padding: 20px;
+                padding: 24px;
                 box-shadow: 0 25px 60px rgba(0,0,0,0.85);
             }}
 
             .cert-border-inner {{
                 border: 1px solid rgba(234, 179, 8, 0.4);
                 border-radius: 12px;
-                padding: 16px;
-                background: radial-gradient(circle at center, rgba(30, 41, 59, 0.2) 0%, rgba(3, 7, 18, 0.4) 100%);
+                padding: 20px;
+                background: radial-gradient(circle at center, rgba(30, 41, 59, 0.25) 0%, rgba(3, 7, 18, 0.45) 100%);
             }}
 
             .cert-header {{
                 text-align: center;
-                border-bottom: 1px solid rgba(234, 179, 8, 0.2);
-                padding-bottom: 12px;
-                margin-bottom: 14px;
+                border-bottom: 1px solid rgba(234, 179, 8, 0.25);
+                padding-bottom: 14px;
+                margin-bottom: 16px;
             }}
 
-            .cert-crest {{
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                border: 1.5px solid #facc15;
-                background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                font-family: 'Cinzel', serif;
-                font-weight: 800;
-                font-size: 18px;
-                color: #facc15;
-                margin-bottom: 6px;
+            .cert-crest-svg {{
+                width: 65px;
+                height: 65px;
+                margin: 0 auto 6px auto;
             }}
 
             .institution-name {{
                 font-family: 'Cinzel', serif;
-                font-size: 11px;
+                font-size: 12px;
                 font-weight: 700;
                 color: #facc15;
                 letter-spacing: 1.5px;
@@ -410,15 +508,16 @@ def generate_report_card(serial_no, test_no, student_data):
 
             .cert-title {{
                 font-family: 'Cinzel', serif;
-                font-size: 18px;
+                font-size: 20px;
                 font-weight: 900;
                 color: #ffffff;
                 margin-top: 4px;
+                letter-spacing: 0.5px;
             }}
 
             .student-section {{
                 text-align: center;
-                margin-bottom: 14px;
+                margin-bottom: 18px;
             }}
 
             .cert-presented-to {{
@@ -431,7 +530,7 @@ def generate_report_card(serial_no, test_no, student_data):
 
             .student-name {{
                 font-family: 'Cinzel', serif;
-                font-size: 22px;
+                font-size: 24px;
                 font-weight: 800;
                 color: #ffffff;
                 margin: 4px 0;
@@ -446,50 +545,51 @@ def generate_report_card(serial_no, test_no, student_data):
             .metrics-grid {{
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
-                gap: 8px;
-                margin-bottom: 14px;
+                gap: 10px;
+                margin-bottom: 18px;
             }}
 
             .metric-box {{
-                background: rgba(15, 23, 42, 0.7);
-                border: 1px solid rgba(234, 179, 8, 0.25);
-                border-radius: 8px;
-                padding: 8px 6px;
+                background: rgba(15, 23, 42, 0.85);
+                border: 1px solid rgba(234, 179, 8, 0.3);
+                border-radius: 10px;
+                padding: 10px 6px;
                 text-align: center;
             }}
 
             .metric-title {{
-                font-size: 7.5px;
+                font-size: 8px;
                 color: #94a3b8;
                 text-transform: uppercase;
                 font-weight: 700;
+                letter-spacing: 0.5px;
             }}
 
             .metric-value {{
                 font-family: 'Space Grotesk', sans-serif;
-                font-size: 16px;
+                font-size: 18px;
                 font-weight: 700;
                 color: #facc15;
-                margin-top: 2px;
+                margin-top: 4px;
             }}
 
             .info-grid {{
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 8px;
-                margin-bottom: 14px;
+                gap: 10px;
+                margin-bottom: 18px;
             }}
 
             .info-item {{
-                background: rgba(30, 41, 59, 0.4);
-                border: 1px solid rgba(255, 255, 255, 0.06);
-                border-left: 3px solid #facc15;
-                padding: 6px 10px;
-                border-radius: 6px;
+                background: rgba(30, 41, 59, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-left: 4px solid #facc15;
+                padding: 8px 12px;
+                border-radius: 8px;
             }}
 
             .info-label {{
-                font-size: 7.5px;
+                font-size: 8px;
                 color: #64748b;
                 text-transform: uppercase;
                 font-weight: 700;
@@ -497,7 +597,7 @@ def generate_report_card(serial_no, test_no, student_data):
             }}
 
             .info-val {{
-                font-size: 11px;
+                font-size: 12px;
                 color: #ffffff;
                 font-weight: 700;
                 margin-top: 2px;
@@ -507,14 +607,14 @@ def generate_report_card(serial_no, test_no, student_data):
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                border-top: 1px solid rgba(234, 179, 8, 0.2);
-                padding-top: 12px;
+                border-top: 1px solid rgba(234, 179, 8, 0.25);
+                padding-top: 14px;
             }}
 
             .official-seal {{
                 display: flex;
                 align-items: center;
-                gap: 8px;
+                gap: 10px;
             }}
 
             .seal-badge {{
@@ -537,7 +637,7 @@ def generate_report_card(serial_no, test_no, student_data):
             }}
 
             .seal-text-sub {{
-                font-size: 8px;
+                font-size: 8.5px;
                 color: #22c55e;
                 font-weight: 700;
             }}
@@ -546,26 +646,35 @@ def generate_report_card(serial_no, test_no, student_data):
                 background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
                 color: #000000;
                 border: none;
-                padding: 10px 16px;
+                padding: 10px 18px;
                 font-family: 'Space Grotesk', sans-serif;
-                font-weight: 700;
-                font-size: 10px;
+                font-weight: 800;
+                font-size: 11px;
                 border-radius: 8px;
                 cursor: pointer;
-                letter-spacing: 1px;
+                letter-spacing: 0.5px;
                 text-transform: uppercase;
+                box-shadow: 0 4px 14px rgba(250, 204, 21, 0.3);
             }}
 
+            /* FULL-PAGE PRINT SPECIFICATIONS */
             @media print {{
                 html, body {{
                     background: #ffffff !important;
                     margin: 0 !important;
+                    padding: 0 !important;
+                    height: 100vh !important;
                 }}
                 .cert-container {{
                     box-shadow: none !important;
-                    border: 3px solid #b45309 !important;
-                    background: #090d16 !important;
+                    border: 4px solid #b45309 !important;
+                    background: #080d1a !important;
                     width: 100% !important;
+                    height: 100vh !important;
+                    border-radius: 0 !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    justify-content: center !important;
                 }}
                 .print-btn {{
                     display: none !important;
@@ -577,7 +686,9 @@ def generate_report_card(serial_no, test_no, student_data):
         <div class="cert-container">
             <div class="cert-border-inner">
                 <div class="cert-header">
-                    <div class="cert-crest">ML</div>
+                    <div class="cert-crest-svg">
+                        {MANISH_LOHANA_SVG_LOGO}
+                    </div>
                     <div class="institution-name">Govt Boys Higher Secondary School Tando Bago</div>
                     <div class="cert-title">Academic Progress Certificate</div>
                 </div>
@@ -641,16 +752,16 @@ def generate_report_card(serial_no, test_no, student_data):
     </body>
     </html>
     """
-    components.html(certificate_html, height=540, scrolling=False)
+    components.html(certificate_html, height=580, scrolling=False)
 
-# ===== 50/50 SPLIT SCREEN LAYOUT =====
-left_col, right_col = st.columns([1, 1], gap="large")
+# ===== MAIN WEBPAGE COLUMNS =====
+left_col, right_col = st.columns([1, 1], gap="medium")
 
 with left_col:
-    st.markdown("""
+    st.markdown(f"""
     <div class="left-hero-container">
-        <div class="hero-circle-accent">
-            <span class="hero-logo-text">ML</span>
+        <div class="logo-hero-box">
+            {MANISH_LOHANA_SVG_LOGO}
         </div>
         <div class="hero-title">Welcome to Student Portal</div>
         <div class="hero-subtitle">Govt Boys Higher Secondary School Tando Bago</div>
