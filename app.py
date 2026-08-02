@@ -10,70 +10,66 @@ import streamlit.components.v1 as components
 st.set_page_config(
     page_title="Student Results Portal | ML",
     page_icon="",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# ===== INJECT SPLIT-SCREEN LAYOUT & CANVAS =====
-split_layout_html = """
+# ===== INJECT FULL-SCREEN INTERACTIVE CANVAS (MOLECULES, NODES & GLYPHS) =====
+canvas_html = """
 <script>
     (function() {
         const parentDoc = window.parent.document;
-
-        // Force Streamlit body to full-width split container
+        
+        // Optimize container layout
         const mainBlock = parentDoc.querySelector('.main .block-container');
         if (mainBlock) {
-            mainBlock.style.maxWidth = '100vw';
-            mainBlock.style.padding = '0';
-            mainBlock.style.margin = '0';
+            mainBlock.style.paddingTop = '1.5rem';
+            mainBlock.style.paddingBottom = '2rem';
+            mainBlock.style.maxWidth = '680px';
         }
 
-        // Create background canvas for Left 50% Visual Area
-        let canvas = parentDoc.getElementById('split-canvas-bg');
+        // Create canvas on the parent document body
+        let canvas = parentDoc.getElementById('interactive-bg-canvas');
         if (!canvas) {
             canvas = parentDoc.createElement('canvas');
-            canvas.id = 'split-canvas-bg';
+            canvas.id = 'interactive-bg-canvas';
             canvas.style.position = 'fixed';
             canvas.style.top = '0';
             canvas.style.left = '0';
-            canvas.style.width = '50vw';
+            canvas.style.width = '100vw';
             canvas.style.height = '100vh';
-            canvas.style.zIndex = '0';
+            canvas.style.zIndex = '-1';
             canvas.style.pointerEvents = 'none';
-            canvas.style.background = 'radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%)';
+            canvas.style.background = 'radial-gradient(circle at 50% 30%, #0f172a 0%, #020617 100%)';
             parentDoc.body.appendChild(canvas);
 
             const ctx = canvas.getContext('2d');
 
             function resize() {
-                canvas.width = window.parent.innerWidth * 0.5;
+                canvas.width = window.parent.innerWidth;
                 canvas.height = window.parent.innerHeight;
             }
             window.parent.addEventListener('resize', resize);
             resize();
 
-            // Interactive 3D Molecules, Nodes, & Glyphs
+            // Interactive Elements: Nodes, Molecules, and Phonetic/Language Glyphs
             const elements = [];
             const glyphs = ['α', 'β', 'Ω', '∫', 'æ', 'θ', 'λ', '∑', 'ð'];
-            const elementCount = 40;
-            let mouse = { x: null, y: null, radius: 140 };
+            const elementCount = 35;
+            let mouse = { x: null, y: null, radius: 150 };
 
             window.parent.addEventListener('mousemove', (e) => {
-                if (e.clientX <= window.parent.innerWidth * 0.5) {
-                    mouse.x = e.clientX;
-                    mouse.y = e.clientY;
-                } else {
-                    mouse.x = null;
-                    mouse.y = null;
-                }
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
             });
 
             class FloatingElement {
                 constructor() {
                     this.x = Math.random() * canvas.width;
                     this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 0.6;
-                    this.vy = (Math.random() - 0.5) * 0.6;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.size = Math.random() * 14 + 10;
                     this.type = Math.floor(Math.random() * 3);
                     this.glyph = glyphs[Math.floor(Math.random() * glyphs.length)];
                     this.angle = Math.random() * Math.PI * 2;
@@ -106,41 +102,38 @@ split_layout_html = """
                     ctx.rotate(this.angle);
 
                     if (this.type === 0) {
-                        // Node
                         ctx.beginPath();
-                        ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
-                        ctx.fillStyle = 'rgba(250, 204, 21, 0.85)';
-                        ctx.shadowBlur = 10;
-                        ctx.shadowColor = '#facc15';
+                        ctx.arc(0, 0, 3, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(234, 179, 8, 0.8)';
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = '#eab308';
                         ctx.fill();
                     } else if (this.type === 1) {
-                        // 3D Molecule
                         ctx.beginPath();
-                        ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
-                        ctx.fillStyle = 'rgba(244, 63, 94, 0.9)';
+                        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(244, 63, 94, 0.85)';
                         ctx.fill();
 
                         for (let i = 0; i < 3; i++) {
                             let bAngle = (i * Math.PI * 2 / 3);
-                            let bx = Math.cos(bAngle) * 14;
-                            let by = Math.sin(bAngle) * 14;
+                            let bx = Math.cos(bAngle) * 12;
+                            let by = Math.sin(bAngle) * 12;
 
                             ctx.beginPath();
                             ctx.moveTo(0, 0);
                             ctx.lineTo(bx, by);
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
                             ctx.lineWidth = 1;
                             ctx.stroke();
 
                             ctx.beginPath();
                             ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
-                            ctx.fillStyle = 'rgba(56, 189, 248, 0.85)';
+                            ctx.fillStyle = 'rgba(56, 189, 248, 0.8)';
                             ctx.fill();
                         }
                     } else {
-                        // Language Glyph
-                        ctx.font = '14px Space Mono, monospace';
-                        ctx.fillStyle = 'rgba(192, 132, 252, 0.7)';
+                        ctx.font = '13px Space Mono, monospace';
+                        ctx.fillStyle = 'rgba(168, 85, 247, 0.6)';
                         ctx.fillText(this.glyph, 0, 0);
                     }
 
@@ -168,7 +161,7 @@ split_layout_html = """
                             ctx.beginPath();
                             ctx.moveTo(elements[i].x, elements[i].y);
                             ctx.lineTo(elements[j].x, elements[j].y);
-                            ctx.strokeStyle = `rgba(250, 204, 21, ${0.15 * (1 - dist / 110)})`;
+                            ctx.strokeStyle = `rgba(234, 179, 8, ${0.12 * (1 - dist / 110)})`;
                             ctx.lineWidth = 0.5;
                             ctx.stroke();
                         }
@@ -181,97 +174,71 @@ split_layout_html = """
     })();
 </script>
 """
-components.html(split_layout_html, height=0)
+components.html(canvas_html, height=0)
 
-# ===== GLOBAL STYLING OVERRIDES =====
+# ===== ULTRA-MODERN GLASSMORPHIC HEADER =====
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
 
-    /* Global Dark Theme */
-    [data-testid="stAppViewContainer"] {
-        background-color: #030712;
+    html, body, [class*="css"] {
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    /* Left Hero Visual Card Styling */
-    .left-hero-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 85vh;
+    .header-card {
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 28px 20px;
         text-align: center;
-        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        margin-bottom: 20px;
     }
 
-    .hero-circle-accent {
-        width: 220px;
-        height: 220px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.9) 100%);
-        border: 2px solid #facc15;
-        box-shadow: 0 0 50px rgba(250, 204, 21, 0.25), inset 0 0 20px rgba(250, 204, 21, 0.15);
-        display: flex;
+    .brand-crest {
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 24px;
-        z-index: 2;
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+        border: 2px solid #facc15;
+        box-shadow: 0 0 25px rgba(250, 204, 21, 0.3);
+        margin-bottom: 14px;
     }
 
-    .hero-logo-text {
+    .brand-initials {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 72px;
+        font-size: 30px;
         font-weight: 700;
         color: #facc15;
-        letter-spacing: 2px;
-        text-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+        letter-spacing: 1px;
     }
 
-    .hero-title {
+    .portal-title {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 32px;
+        font-size: 24px;
         font-weight: 700;
         color: #ffffff;
         letter-spacing: -0.5px;
         margin: 0;
     }
 
-    .hero-subtitle {
+    .portal-subtitle {
         color: #94a3b8;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 2px;
-        margin-top: 8px;
+        letter-spacing: 1.5px;
+        margin-top: 6px;
     }
 
-    /* Right Form Container Styling */
-    .right-portal-card {
-        background: #0b1329;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 20px;
-        padding: 32px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
-        margin-top: 20px;
-    }
-
-    .form-header-title {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 24px;
-        font-weight: 700;
-        color: #ffffff;
-        margin-bottom: 4px;
-    }
-
-    .form-header-sub {
-        font-size: 12px;
-        color: #64748b;
-        margin-bottom: 24px;
-    }
-
-    /* Streamlit Input Overrides */
+    /* Input overrides */
     .stTextInput > div > div {
-        background-color: rgba(15, 23, 42, 0.9) !important;
+        background-color: rgba(15, 23, 42, 0.8) !important;
         border: 1px solid rgba(255, 255, 255, 0.12) !important;
         border-radius: 12px !important;
         color: #ffffff !important;
@@ -296,6 +263,14 @@ st.markdown("""
         font-weight: 700 !important;
     }
 </style>
+
+<div class="header-card">
+    <div class="brand-crest">
+        <span class="brand-initials">ML</span>
+    </div>
+    <div class="portal-title">Student Results Portal</div>
+    <div class="portal-subtitle">Govt Boys Higher Secondary School Tando Bago</div>
+</div>
 """, unsafe_allow_html=True)
 
 # ===== UTILITY FUNCTIONS =====
@@ -356,35 +331,43 @@ def generate_report_card(serial_no, test_no, student_data):
                 font-family: 'Plus Jakarta Sans', sans-serif;
                 margin: 0;
                 padding: 0;
+                display: flex;
+                justify-content: center;
             }}
 
+            /* Certificate Frame Dimensions optimized for A4 / Screen */
             .cert-container {{
                 background: linear-gradient(145deg, #0b1329 0%, #030712 100%);
                 color: #ffffff;
                 width: 100%;
+                max-width: 650px;
                 border: 2px solid #ca8a04;
                 border-radius: 16px;
-                padding: 20px;
+                padding: 24px;
+                position: relative;
                 box-shadow: 0 25px 60px rgba(0,0,0,0.85);
+                overflow: hidden;
             }}
 
+            /* Decorative Gold Foil Double Border */
             .cert-border-inner {{
                 border: 1px solid rgba(234, 179, 8, 0.4);
                 border-radius: 12px;
-                padding: 16px;
+                padding: 20px;
+                position: relative;
                 background: radial-gradient(circle at center, rgba(30, 41, 59, 0.2) 0%, rgba(3, 7, 18, 0.4) 100%);
             }}
 
             .cert-header {{
                 text-align: center;
                 border-bottom: 1px solid rgba(234, 179, 8, 0.2);
-                padding-bottom: 12px;
-                margin-bottom: 14px;
+                padding-bottom: 16px;
+                margin-bottom: 20px;
             }}
 
             .cert-crest {{
-                width: 44px;
-                height: 44px;
+                width: 50px;
+                height: 50px;
                 border-radius: 50%;
                 border: 1.5px solid #facc15;
                 background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
@@ -393,151 +376,161 @@ def generate_report_card(serial_no, test_no, student_data):
                 justify-content: center;
                 font-family: 'Cinzel', serif;
                 font-weight: 800;
-                font-size: 18px;
+                font-size: 20px;
                 color: #facc15;
-                margin-bottom: 6px;
+                box-shadow: 0 0 15px rgba(250, 204, 21, 0.25);
+                margin-bottom: 8px;
             }}
 
             .institution-name {{
                 font-family: 'Cinzel', serif;
-                font-size: 11px;
+                font-size: 13px;
                 font-weight: 700;
                 color: #facc15;
-                letter-spacing: 1.5px;
+                letter-spacing: 2px;
                 text-transform: uppercase;
                 margin: 0;
             }}
 
             .cert-title {{
                 font-family: 'Cinzel', serif;
-                font-size: 18px;
+                font-size: 22px;
                 font-weight: 900;
                 color: #ffffff;
+                letter-spacing: 1.5px;
                 margin-top: 4px;
             }}
 
             .student-section {{
                 text-align: center;
-                margin-bottom: 14px;
+                margin-bottom: 20px;
             }}
 
             .cert-presented-to {{
-                font-size: 9px;
+                font-size: 10px;
                 color: #94a3b8;
                 text-transform: uppercase;
-                letter-spacing: 1.5px;
+                letter-spacing: 2px;
                 font-weight: 600;
             }}
 
             .student-name {{
                 font-family: 'Cinzel', serif;
-                font-size: 22px;
+                font-size: 26px;
                 font-weight: 800;
                 color: #ffffff;
-                margin: 4px 0;
+                margin: 6px 0;
+                background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
             }}
 
             .student-sub {{
-                color: #cbd5e1;
-                font-size: 11px;
+                color: #e2e8f0;
+                font-size: 12px;
                 font-weight: 600;
             }}
 
+            /* Academic Metric Grid */
             .metrics-grid {{
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
-                gap: 8px;
-                margin-bottom: 14px;
+                gap: 10px;
+                margin-bottom: 20px;
             }}
 
             .metric-box {{
                 background: rgba(15, 23, 42, 0.7);
                 border: 1px solid rgba(234, 179, 8, 0.25);
-                border-radius: 8px;
-                padding: 8px 6px;
+                border-radius: 10px;
+                padding: 10px 8px;
                 text-align: center;
             }}
 
             .metric-title {{
-                font-size: 7.5px;
+                font-size: 8px;
                 color: #94a3b8;
                 text-transform: uppercase;
+                letter-spacing: 1px;
                 font-weight: 700;
             }}
 
             .metric-value {{
                 font-family: 'Space Grotesk', sans-serif;
-                font-size: 16px;
+                font-size: 18px;
                 font-weight: 700;
                 color: #facc15;
                 margin-top: 2px;
             }}
 
+            /* Detailed Table Grid */
             .info-grid {{
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 8px;
-                margin-bottom: 14px;
+                gap: 10px;
+                margin-bottom: 20px;
             }}
 
             .info-item {{
                 background: rgba(30, 41, 59, 0.4);
                 border: 1px solid rgba(255, 255, 255, 0.06);
                 border-left: 3px solid #facc15;
-                padding: 6px 10px;
+                padding: 8px 12px;
                 border-radius: 6px;
             }}
 
             .info-label {{
-                font-size: 7.5px;
+                font-size: 8px;
                 color: #64748b;
                 text-transform: uppercase;
+                letter-spacing: 1px;
                 font-weight: 700;
                 display: block;
             }}
 
             .info-val {{
-                font-size: 11px;
+                font-size: 12px;
                 color: #ffffff;
                 font-weight: 700;
                 margin-top: 2px;
             }}
 
+            /* Seal & Verification Section */
             .cert-footer {{
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 border-top: 1px solid rgba(234, 179, 8, 0.2);
-                padding-top: 12px;
+                padding-top: 16px;
             }}
 
             .official-seal {{
                 display: flex;
                 align-items: center;
-                gap: 8px;
+                gap: 10px;
             }}
 
             .seal-badge {{
-                width: 36px;
-                height: 36px;
+                width: 44px;
+                height: 44px;
                 border-radius: 50%;
-                border: 1.5px dashed #facc15;
+                border: 2px dashed #facc15;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 color: #facc15;
-                font-size: 14px;
+                font-size: 18px;
                 background: rgba(250, 204, 21, 0.1);
             }}
 
             .seal-text-title {{
-                font-size: 10px;
+                font-size: 11px;
                 font-weight: 800;
                 color: #ffffff;
             }}
 
             .seal-text-sub {{
-                font-size: 8px;
+                font-size: 9px;
                 color: #22c55e;
                 font-weight: 700;
             }}
@@ -546,26 +539,31 @@ def generate_report_card(serial_no, test_no, student_data):
                 background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
                 color: #000000;
                 border: none;
-                padding: 10px 16px;
+                padding: 12px 20px;
                 font-family: 'Space Grotesk', sans-serif;
                 font-weight: 700;
-                font-size: 10px;
-                border-radius: 8px;
+                font-size: 11px;
+                border-radius: 10px;
                 cursor: pointer;
                 letter-spacing: 1px;
                 text-transform: uppercase;
+                box-shadow: 0 4px 15px rgba(250, 204, 21, 0.3);
             }}
 
+            /* PRINT SPECIFIC STYLES TO TARGET A4 PDF DOWNLOAD PERFECTLY */
             @media print {{
                 html, body {{
                     background: #ffffff !important;
                     margin: 0 !important;
+                    padding: 0 !important;
                 }}
                 .cert-container {{
                     box-shadow: none !important;
                     border: 3px solid #b45309 !important;
                     background: #090d16 !important;
                     width: 100% !important;
+                    max-width: 100% !important;
+                    page-break-inside: avoid !important;
                 }}
                 .print-btn {{
                     display: none !important;
@@ -641,99 +639,78 @@ def generate_report_card(serial_no, test_no, student_data):
     </body>
     </html>
     """
-    components.html(certificate_html, height=540, scrolling=False)
+    components.html(certificate_html, height=620, scrolling=False)
 
-# ===== 50/50 SPLIT SCREEN LAYOUT =====
-left_col, right_col = st.columns([1, 1], gap="large")
+# ===== MAIN APPLICATION WORKFLOW =====
+test_input = st.text_input("Enter Test Code:", placeholder="e.g., A4-25-01")
 
-with left_col:
-    st.markdown("""
-    <div class="left-hero-container">
-        <div class="hero-circle-accent">
-            <span class="hero-logo-text">ML</span>
-        </div>
-        <div class="hero-title">Welcome to Student Portal</div>
-        <div class="hero-subtitle">Govt Boys Higher Secondary School Tando Bago</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with right_col:
-    st.markdown("""
-    <div class="right-portal-card">
-        <div class="form-header-title">Search Student Record</div>
-        <div class="form-header-sub">Please enter exam details to view academic progress certificate</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    test_input = st.text_input("Enter Test Code:", placeholder="e.g., A4-25-01")
-
-    if test_input:
-        cleaned_test = test_input.strip().upper()
+if test_input:
+    cleaned_test = test_input.strip().upper()
+    
+    if validate_test_number(cleaned_test):
+        file_name = f"{cleaned_test}.xlsx"
         
-        if validate_test_number(cleaned_test):
-            file_name = f"{cleaned_test}.xlsx"
+        if os.path.exists(file_name):
+            st.success(f"✓ Active Exam Session: {cleaned_test}")
             
-            if os.path.exists(file_name):
-                st.success(f"✓ Active Exam Session: {cleaned_test}")
+            scan_tab1, scan_tab2 = st.tabs([" Camera Scan", "️ Upload Picture"])
+            scanned_serial = ""
+
+            with scan_tab1:
+                cam_img = st.camera_input("Scan Barcode")
+                if cam_img:
+                    pil_img = Image.open(cam_img)
+                    found_code = decode_barcode_image(pil_img)
+                    if found_code:
+                        scanned_serial = found_code
+                        st.success(f"✓ Detected: {scanned_serial}")
+                    else:
+                        st.warning("⚠️ No barcode detected in frame.")
+
+            with scan_tab2:
+                uploaded_img = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png", "webp"])
+                if uploaded_img:
+                    pil_img = Image.open(uploaded_img)
+                    found_code = decode_barcode_image(pil_img)
+                    if found_code:
+                        scanned_serial = found_code
+                        st.success(f"✓ Detected: {scanned_serial}")
+                    else:
+                        st.warning("⚠️ Could not read barcode from image.")
+
+            default_serial = scanned_serial if scanned_serial else ""
+            serial_input = st.text_input("Enter or Confirm Serial Number:", value=default_serial, placeholder="e.g., MGM75000002")
+            
+            if serial_input:
+                cleaned_serial = serial_input.strip().upper()
                 
-                scan_tab1, scan_tab2 = st.tabs([" Camera Scan", "️ Upload Picture"])
-                scanned_serial = ""
-
-                with scan_tab1:
-                    cam_img = st.camera_input("Scan Barcode")
-                    if cam_img:
-                        pil_img = Image.open(cam_img)
-                        found_code = decode_barcode_image(pil_img)
-                        if found_code:
-                            scanned_serial = found_code
-                            st.success(f"✓ Detected: {scanned_serial}")
-                        else:
-                            st.warning("⚠️ No barcode detected in frame.")
-
-                with scan_tab2:
-                    uploaded_img = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png", "webp"])
-                    if uploaded_img:
-                        pil_img = Image.open(uploaded_img)
-                        found_code = decode_barcode_image(pil_img)
-                        if found_code:
-                            scanned_serial = found_code
-                            st.success(f"✓ Detected: {scanned_serial}")
-                        else:
-                            st.warning("⚠️ Could not read barcode from image.")
-
-                default_serial = scanned_serial if scanned_serial else ""
-                serial_input = st.text_input("Enter or Confirm Serial Number:", value=default_serial, placeholder="e.g., MGM75000002")
-                
-                if serial_input:
-                    cleaned_serial = serial_input.strip().upper()
+                try:
+                    df = pd.read_excel(file_name)
+                    df.columns = df.columns.astype(str).str.strip().str.lower().str.replace(' ', '_')
                     
-                    try:
-                        df = pd.read_excel(file_name)
-                        df.columns = df.columns.astype(str).str.strip().str.lower().str.replace(' ', '_')
+                    if 'serial_number' in df.columns:
+                        result = df[df['serial_number'].astype(str).str.strip().str.upper() == cleaned_serial]
                         
-                        if 'serial_number' in df.columns:
-                            result = df[df['serial_number'].astype(str).str.strip().str.upper() == cleaned_serial]
+                        if len(result) > 0:
+                            raw_row = result.iloc[0].to_dict()
+                            student_row = {
+                                k: ("N/A" if pd.isna(v) else str(v).strip()) 
+                                for k, v in raw_row.items()
+                            }
                             
-                            if len(result) > 0:
-                                raw_row = result.iloc[0].to_dict()
-                                student_row = {
-                                    k: ("N/A" if pd.isna(v) else str(v).strip()) 
-                                    for k, v in raw_row.items()
-                                }
-                                
-                                generate_report_card(
-                                    serial_no=cleaned_serial,
-                                    test_no=cleaned_test,
-                                    student_data=student_row
-                                )
-                            else:
-                                st.error(f"❌ Serial Number '{cleaned_serial}' not found in Test {cleaned_test}.")
+                            generate_report_card(
+                                serial_no=cleaned_serial,
+                                test_no=cleaned_test,
+                                student_data=student_row
+                            )
                         else:
-                            st.error("❌ Excel file missing 'serial_number' column header.")
-                    except Exception as e:
-                        st.error(f"Error reading spreadsheet: {e}")
-            else:
-                st.error(f"❌ Test file '{file_name}' not found in repository.")
+                            st.error(f"❌ Serial Number '{cleaned_serial}' not found in Test {cleaned_test}.")
+                    else:
+                        st.error("❌ Excel file missing 'serial_number' column header.")
+                except Exception as e:
+                    st.error(f"Error reading spreadsheet: {e}")
         else:
-            st.error("❌ Invalid Test Code format! Use format like: A4-25-01, J6-26-01")
+            st.error(f"❌ Test file '{file_name}' not found in repository.")
+    else:
+        st.error("❌ Invalid Test Code format! Use format like: A4-25-01, J6-26-01")
 
