@@ -20,7 +20,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ===== INJECT SPLIT-SCREEN LAYOUT & CANVAS =====
+# ===== INJECT SPLIT-SCREEN LAYOUT & MULTI-BODY PHYSICS CANVAS =====
 split_layout_html = """
 <script>
     (function() {
@@ -48,7 +48,7 @@ split_layout_html = """
             canvas.style.top = '0';
             canvas.style.left = '0';
             canvas.style.zIndex = '0';
-            canvas.style.pointerEvents = 'none';
+            canvas.style.pointerEvents = 'auto';
             parentDoc.body.style.backgroundColor = '#030712';
             parentDoc.body.appendChild(canvas);
 
@@ -83,32 +83,90 @@ split_layout_html = """
             }
             window.parent.addEventListener('resize', resize);
 
-            // Interactive 3D Molecules, Nodes, & Glyphs
+            // Interactive Elements with Inter-particle & Logo Collision Physics
             const elements = [];
             const glyphs = ['α', 'β', 'Ω', '∫', 'æ', 'θ', 'λ', '∑', 'ð'];
-            const elementCount = 30;
-            let mouse = { x: null, y: null, radius: 120 };
+            const elementCount = 35;
+            let pointer = { x: null, y: null, radius: 140, active: false };
+
+            function updatePointerPosition(clientX, clientY) {
+                const rect = canvas.getBoundingClientRect();
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+                if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+                    pointer.x = x;
+                    pointer.y = y;
+                    pointer.active = true;
+                } else if (isMobile()) {
+                    pointer.x = x;
+                    pointer.y = y;
+                    pointer.active = true;
+                } else {
+                    pointer.x = null;
+                    pointer.y = null;
+                    pointer.active = false;
+                }
+            }
 
             window.parent.addEventListener('mousemove', (e) => {
-                if (!isMobile() && e.clientX <= window.parent.innerWidth * 0.5) {
-                    mouse.x = e.clientX;
-                    mouse.y = e.clientY;
-                } else {
-                    mouse.x = null;
-                    mouse.y = null;
-                }
+                updatePointerPosition(e.clientX, e.clientY);
             });
+
+            window.parent.addEventListener('mouseleave', () => {
+                pointer.x = null;
+                pointer.y = null;
+                pointer.active = false;
+            });
+
+            window.parent.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 0) {
+                    updatePointerPosition(e.touches.get(0).clientX, e.touches.get(0).clientY);
+                    triggerPulse(pointer.x, pointer.y);
+                }
+            }, { passive: true });
+
+            window.parent.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 0) {
+                    updatePointerPosition(e.touches.get(0).clientX, e.touches.get(0).clientY);
+                }
+            }, { passive: true });
+
+            window.parent.addEventListener('touchend', () => {
+                pointer.x = null;
+                pointer.y = null;
+                pointer.active = false;
+            });
+
+            window.parent.addEventListener('click', (e) => {
+                updatePointerPosition(e.clientX, e.clientY);
+                triggerPulse(pointer.x, pointer.y);
+            });
+
+            function triggerPulse(px, py) {
+                if (px === null || py === null) return;
+                elements.forEach(el => {
+                    let dx = el.x - px;
+                    let dy = el.y - py;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 220) {
+                        let angle = Math.atan2(dy, dx);
+                        el.vx += Math.cos(angle) * 5;
+                        el.vy += Math.sin(angle) * 5;
+                    }
+                });
+            }
 
             class FloatingElement {
                 constructor() {
                     this.x = Math.random() * canvas.width;
                     this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 0.5;
-                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.vx = (Math.random() - 0.5) * 0.9;
+                    this.vy = (Math.random() - 0.5) * 0.9;
+                    this.radius = 14;
                     this.type = Math.floor(Math.random() * 3);
                     this.glyph = glyphs[Math.floor(Math.random() * glyphs.length)];
                     this.angle = Math.random() * Math.PI * 2;
-                    this.spin = (Math.random() - 0.5) * 0.02;
+                    this.spin = (Math.random() - 0.5) * 0.03;
                 }
 
                 update() {
@@ -116,17 +174,42 @@ split_layout_html = """
                     this.y += this.vy;
                     this.angle += this.spin;
 
-                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                    this.vx *= 0.99;
+                    this.vy *= 0.99;
 
-                    if (mouse.x !== null) {
-                        let dx = mouse.x - this.x;
-                        let dy = mouse.y - this.y;
+                    // Wall boundaries
+                    if (this.x < this.radius) { this.x = this.radius; this.vx *= -1; }
+                    if (this.x > canvas.width - this.radius) { this.x = canvas.width - this.radius; this.vx *= -1; }
+                    if (this.y < this.radius) { this.y = this.radius; this.vy *= -1; }
+                    if (this.y > canvas.height - this.radius) { this.y = canvas.height - this.radius; this.vy *= -1; }
+
+                    // Interaction with Central Logo Circle (Obstacle repulsion)
+                    let logoCenterX = canvas.width / 2;
+                    let logoCenterY = isMobile() ? canvas.height * 0.38 : canvas.height / 2;
+                    let logoRadius = isMobile() ? 75 : 110;
+
+                    let lDx = this.x - logoCenterX;
+                    let lDy = this.y - logoCenterY;
+                    let lDist = Math.sqrt(lDx * lDx + lDy * lDy);
+                    let minAllowedDist = logoRadius + this.radius + 15;
+
+                    if (lDist < minAllowedDist) {
+                        let angle = Math.atan2(lDy, lDx);
+                        this.x = logoCenterX + Math.cos(angle) * minAllowedDist;
+                        this.y = logoCenterY + Math.sin(angle) * minAllowedDist;
+                        this.vx += Math.cos(angle) * 0.8;
+                        this.vy += Math.sin(angle) * 0.8;
+                    }
+
+                    // Mouse / Touch Repulsion
+                    if (pointer.x !== null && pointer.y !== null) {
+                        let dx = pointer.x - this.x;
+                        let dy = pointer.y - this.y;
                         let dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < mouse.radius) {
-                            let force = (mouse.radius - dist) / mouse.radius;
-                            this.x -= (dx / dist) * force * 2;
-                            this.y -= (dy / dist) * force * 2;
+                        if (dist < pointer.radius) {
+                            let force = (pointer.radius - dist) / pointer.radius;
+                            this.x -= (dx / dist) * force * 3.5;
+                            this.y -= (dy / dist) * force * 3.5;
                         }
                     }
                 }
@@ -138,37 +221,37 @@ split_layout_html = """
 
                     if (this.type === 0) {
                         ctx.beginPath();
-                        ctx.arc(0, 0, 3, 0, Math.PI * 2);
-                        ctx.fillStyle = 'rgba(250, 204, 21, 0.85)';
-                        ctx.shadowBlur = 8;
+                        ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(250, 204, 21, 0.9)';
+                        ctx.shadowBlur = 10;
                         ctx.shadowColor = '#facc15';
                         ctx.fill();
                     } else if (this.type === 1) {
                         ctx.beginPath();
-                        ctx.arc(0, 0, 4, 0, Math.PI * 2);
-                        ctx.fillStyle = 'rgba(244, 63, 94, 0.9)';
+                        ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(244, 63, 94, 0.95)';
                         ctx.fill();
 
                         for (let i = 0; i < 3; i++) {
                             let bAngle = (i * Math.PI * 2 / 3);
-                            let bx = Math.cos(bAngle) * 12;
-                            let by = Math.sin(bAngle) * 12;
+                            let bx = Math.cos(bAngle) * 14;
+                            let by = Math.sin(bAngle) * 14;
 
                             ctx.beginPath();
                             ctx.moveTo(0, 0);
                             ctx.lineTo(bx, by);
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
                             ctx.lineWidth = 1;
                             ctx.stroke();
 
                             ctx.beginPath();
-                            ctx.arc(bx, by, 2, 0, Math.PI * 2);
-                            ctx.fillStyle = 'rgba(56, 189, 248, 0.85)';
+                            ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
+                            ctx.fillStyle = 'rgba(56, 189, 248, 0.9)';
                             ctx.fill();
                         }
                     } else {
-                        ctx.font = '13px Space Mono, monospace';
-                        ctx.fillStyle = 'rgba(192, 132, 252, 0.7)';
+                        ctx.font = '14px Space Mono, monospace';
+                        ctx.fillStyle = 'rgba(192, 132, 252, 0.8)';
                         ctx.fillText(this.glyph, 0, 0);
                     }
 
@@ -198,12 +281,22 @@ split_layout_html = """
                         let dy = elements[i].y - elements[j].y;
                         let dist = Math.sqrt(dx * dx + dy * dy);
 
-                        if (dist < 100) {
+                        // Character-to-character collision impulse & connection lines
+                        if (dist < 32) {
+                            let angle = Math.atan2(dy, dx);
+                            let push = (32 - dist) * 0.05;
+                            elements[i].vx += Math.cos(angle) * push;
+                            elements[i].vy += Math.sin(angle) * push;
+                            elements[j].vx -= Math.cos(angle) * push;
+                            elements[j].vy -= Math.sin(angle) * push;
+                        }
+
+                        if (dist < 110) {
                             ctx.beginPath();
                             ctx.moveTo(elements[i].x, elements[i].y);
                             ctx.lineTo(elements[j].x, elements[j].y);
-                            ctx.strokeStyle = `rgba(250, 204, 21, ${0.15 * (1 - dist / 100)})`;
-                            ctx.lineWidth = 0.5;
+                            ctx.strokeStyle = `rgba(250, 204, 21, ${0.22 * (1 - dist / 110)})`;
+                            ctx.lineWidth = 0.7;
                             ctx.stroke();
                         }
                     }
