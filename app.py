@@ -20,14 +20,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ===== INJECT SPLIT-SCREEN LAYOUT & MULTI-BODY PHYSICS CANVAS =====
+# ===== INJECT SPLIT-SCREEN LAYOUT & ADVANCED BONDING PHYSICS CANVAS =====
 split_layout_html = """
 <script>
     (function() {
         const parentDoc = window.parent.document;
         const MOBILE_BREAKPOINT = 640;
 
-        // Force Streamlit body to full-width split container
         const mainBlock = parentDoc.querySelector('.main .block-container');
         if (mainBlock) {
             mainBlock.style.maxWidth = '100vw';
@@ -39,7 +38,6 @@ split_layout_html = """
             return window.parent.innerWidth <= MOBILE_BREAKPOINT;
         }
 
-        // Create background canvas for Left Visual Area
         let canvas = parentDoc.getElementById('split-canvas-bg');
         if (!canvas) {
             canvas = parentDoc.createElement('canvas');
@@ -83,10 +81,10 @@ split_layout_html = """
             }
             window.parent.addEventListener('resize', resize);
 
-            // Interactive Elements with Inter-particle & Logo Collision Physics
+            // Molecular & Phonetic Bonding Physics Elements
             const elements = [];
-            const glyphs = ['α', 'β', 'Ω', '∫', 'æ', 'θ', 'λ', '∑', 'ð'];
-            const elementCount = 35;
+            const glyphs = ['α', 'β', 'Ω', '∫', 'æ', 'θ', 'λ', '∑', 'ð', 'DATA', 'EXAM', 'ML', 'PASS', 'NODE'];
+            const elementCount = 32;
             let pointer = { x: null, y: null, radius: 140, active: false };
 
             function updatePointerPosition(clientX, clientY) {
@@ -150,8 +148,11 @@ split_layout_html = """
                     let dist = Math.sqrt(dx * dx + dy * dy);
                     if (dist < 220) {
                         let angle = Math.atan2(dy, dx);
-                        el.vx += Math.cos(angle) * 5;
-                        el.vy += Math.sin(angle) * 5;
+                        el.vx += Math.cos(angle) * 6;
+                        el.vy += Math.sin(angle) * 6;
+                        // Break bonds on strong pulse/touch
+                        el.bondedTo = null;
+                        el.clusterScale = 1.0;
                     }
                 });
             }
@@ -160,13 +161,15 @@ split_layout_html = """
                 constructor() {
                     this.x = Math.random() * canvas.width;
                     this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 0.9;
-                    this.vy = (Math.random() - 0.5) * 0.9;
+                    this.vx = (Math.random() - 0.5) * 1.2;
+                    this.vy = (Math.random() - 0.5) * 1.2;
                     this.radius = 14;
                     this.type = Math.floor(Math.random() * 3);
                     this.glyph = glyphs[Math.floor(Math.random() * glyphs.length)];
                     this.angle = Math.random() * Math.PI * 2;
                     this.spin = (Math.random() - 0.5) * 0.03;
+                    this.bondedTo = null; // Dynamic bonding reference
+                    this.clusterScale = 1.0;
                 }
 
                 update() {
@@ -174,16 +177,16 @@ split_layout_html = """
                     this.y += this.vy;
                     this.angle += this.spin;
 
-                    this.vx *= 0.99;
-                    this.vy *= 0.99;
+                    this.vx *= 0.985;
+                    this.vy *= 0.985;
 
                     // Wall boundaries
-                    if (this.x < this.radius) { this.x = this.radius; this.vx *= -1; }
-                    if (this.x > canvas.width - this.radius) { this.x = canvas.width - this.radius; this.vx *= -1; }
-                    if (this.y < this.radius) { this.y = this.radius; this.vy *= -1; }
-                    if (this.y > canvas.height - this.radius) { this.y = canvas.height - this.radius; this.vy *= -1; }
+                    if (this.x < this.radius) { this.x = this.radius; this.vx *= -1; this.bondedTo = null; }
+                    if (this.x > canvas.width - this.radius) { this.x = canvas.width - this.radius; this.vx *= -1; this.bondedTo = null; }
+                    if (this.y < this.radius) { this.y = this.radius; this.vy *= -1; this.bondedTo = null; }
+                    if (this.y > canvas.height - this.radius) { this.y = canvas.height - this.radius; this.vy *= -1; this.bondedTo = null; }
 
-                    // Interaction with Central Logo Circle (Obstacle repulsion)
+                    // Central Logo Circle obstacle interaction
                     let logoCenterX = canvas.width / 2;
                     let logoCenterY = isMobile() ? canvas.height * 0.38 : canvas.height / 2;
                     let logoRadius = isMobile() ? 75 : 110;
@@ -197,8 +200,9 @@ split_layout_html = """
                         let angle = Math.atan2(lDy, lDx);
                         this.x = logoCenterX + Math.cos(angle) * minAllowedDist;
                         this.y = logoCenterY + Math.sin(angle) * minAllowedDist;
-                        this.vx += Math.cos(angle) * 0.8;
-                        this.vy += Math.sin(angle) * 0.8;
+                        this.vx += Math.cos(angle) * 1.0;
+                        this.vy += Math.sin(angle) * 1.0;
+                        this.bondedTo = null;
                     }
 
                     // Mouse / Touch Repulsion
@@ -208,8 +212,9 @@ split_layout_html = """
                         let dist = Math.sqrt(dx * dx + dy * dy);
                         if (dist < pointer.radius) {
                             let force = (pointer.radius - dist) / pointer.radius;
-                            this.x -= (dx / dist) * force * 3.5;
-                            this.y -= (dy / dist) * force * 3.5;
+                            this.x -= (dx / dist) * force * 4.0;
+                            this.y -= (dy / dist) * force * 4.0;
+                            this.bondedTo = null;
                         }
                     }
                 }
@@ -218,41 +223,46 @@ split_layout_html = """
                     ctx.save();
                     ctx.translate(this.x, this.y);
                     ctx.rotate(this.angle);
+                    let scale = this.clusterScale;
+                    ctx.scale(scale, scale);
 
                     if (this.type === 0) {
+                        // Atom Node
                         ctx.beginPath();
-                        ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
-                        ctx.fillStyle = 'rgba(250, 204, 21, 0.9)';
-                        ctx.shadowBlur = 10;
+                        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(250, 204, 21, 0.95)';
+                        ctx.shadowBlur = 12;
                         ctx.shadowColor = '#facc15';
                         ctx.fill();
                     } else if (this.type === 1) {
+                        // Molecule Compound
                         ctx.beginPath();
-                        ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+                        ctx.arc(0, 0, 5, 0, Math.PI * 2);
                         ctx.fillStyle = 'rgba(244, 63, 94, 0.95)';
                         ctx.fill();
 
                         for (let i = 0; i < 3; i++) {
                             let bAngle = (i * Math.PI * 2 / 3);
-                            let bx = Math.cos(bAngle) * 14;
-                            let by = Math.sin(bAngle) * 14;
+                            let bx = Math.cos(bAngle) * 15;
+                            let by = Math.sin(bAngle) * 15;
 
                             ctx.beginPath();
                             ctx.moveTo(0, 0);
                             ctx.lineTo(bx, by);
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-                            ctx.lineWidth = 1;
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                            ctx.lineWidth = 1.2;
                             ctx.stroke();
 
                             ctx.beginPath();
-                            ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
-                            ctx.fillStyle = 'rgba(56, 189, 248, 0.9)';
+                            ctx.arc(bx, by, 3, 0, Math.PI * 2);
+                            ctx.fillStyle = 'rgba(56, 189, 248, 0.95)';
                             ctx.fill();
                         }
                     } else {
-                        ctx.font = '14px Space Mono, monospace';
-                        ctx.fillStyle = 'rgba(192, 132, 252, 0.8)';
-                        ctx.fillText(this.glyph, 0, 0);
+                        // Phonetic / Word Tag
+                        ctx.font = 'bold 12px Space Mono, monospace';
+                        ctx.fillStyle = 'rgba(192, 132, 252, 0.9)';
+                        ctx.fillText(this.glyph, -10, 4);
                     }
 
                     ctx.restore();
@@ -281,22 +291,42 @@ split_layout_html = """
                         let dy = elements[i].y - elements[j].y;
                         let dist = Math.sqrt(dx * dx + dy * dy);
 
-                        // Character-to-character collision impulse & connection lines
-                        if (dist < 32) {
+                        // Elastic collision
+                        if (dist < 30) {
                             let angle = Math.atan2(dy, dx);
-                            let push = (32 - dist) * 0.05;
+                            let push = (30 - dist) * 0.08;
                             elements[i].vx += Math.cos(angle) * push;
                             elements[i].vy += Math.sin(angle) * push;
                             elements[j].vx -= Math.cos(angle) * push;
                             elements[j].vy -= Math.sin(angle) * push;
                         }
 
-                        if (dist < 110) {
+                        // Molecular Bonding & Phonetic Word Merging Physics
+                        if (dist < 65) {
+                            // Pull towards each other like chemical bonds / phonetics forming words
+                            let pullAngle = Math.atan2(dy, dx);
+                            let pullForce = 0.015;
+                            elements[i].vx -= Math.cos(pullAngle) * pullForce;
+                            elements[i].vy -= Math.sin(pullAngle) * pullForce;
+                            elements[j].vx += Math.cos(pullAngle) * pullForce;
+                            elements[j].vy += Math.sin(pullAngle) * pullForce;
+
+                            // When very close, simulate joining into a bigger cluster / word molecule
+                            if (dist < 38) {
+                                elements[i].clusterScale = 1.25;
+                                elements[j].clusterScale = 1.25;
+                                elements[i].bondedTo = j;
+                            } else {
+                                elements[i].clusterScale = 1.0;
+                                elements[j].clusterScale = 1.0;
+                            }
+
+                            // Draw glowing bond / chemical link
                             ctx.beginPath();
                             ctx.moveTo(elements[i].x, elements[i].y);
                             ctx.lineTo(elements[j].x, elements[j].y);
-                            ctx.strokeStyle = `rgba(250, 204, 21, ${0.22 * (1 - dist / 110)})`;
-                            ctx.lineWidth = 0.7;
+                            ctx.strokeStyle = `rgba(250, 204, 21, ${0.45 * (1 - dist / 65)})`;
+                            ctx.lineWidth = dist < 38 ? 2.0 : 0.8;
                             ctx.stroke();
                         }
                     }
@@ -310,10 +340,16 @@ split_layout_html = """
 """
 components.html(split_layout_html, height=0)
 
-# ===== GLOBAL STYLING OVERRIDES =====
+# ===== GLOBAL STYLING OVERRIDES & PRINT HIDE RULE =====
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+
+    @media print {
+        .print-btn {
+            display: none !important;
+        }
+    }
 
     [data-testid="stAppViewContainer"] {
         background-color: transparent !important;
@@ -551,6 +587,12 @@ def generate_report_card(serial_no, test_no, student_data):
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 box-sizing: border-box;
+            }}
+
+            @media print {{
+                .print-btn {{
+                    display: none !important;
+                }}
             }}
 
             @page {{
