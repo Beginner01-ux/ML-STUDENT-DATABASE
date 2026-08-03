@@ -33,20 +33,13 @@ split_layout_html = """
             mainBlock.style.maxWidth = '100vw';
             mainBlock.style.padding = '0';
             mainBlock.style.margin = '0';
-            // NOTE: an earlier attempt fixed a canvas-paints-over-input issue by
-            // setting mainBlock.style.position='relative' + zIndex='1' here.
-            // That touches Streamlit's own internal container, which this app
-            // doesn't fully control the layout/overflow behavior of -- it caused
-            // the entire right column (form card + input) to stop rendering on
-            // mobile. Reverted. The canvas is pushed behind everything instead
-            // (below), which only touches an element this script owns directly.
         }
 
         function isMobile() {
             return window.parent.innerWidth <= MOBILE_BREAKPOINT;
         }
 
-        // Create background canvas for Left Visual Area (full-width on mobile, 50% on desktop)
+        // Create background canvas for Left Visual Area
         let canvas = parentDoc.getElementById('split-canvas-bg');
         if (!canvas) {
             canvas = parentDoc.createElement('canvas');
@@ -54,20 +47,15 @@ split_layout_html = """
             canvas.style.position = 'fixed';
             canvas.style.top = '0';
             canvas.style.left = '0';
-            // FIXED: negative z-index guarantees this decorative canvas always
-            // paints behind normal page content (which defaults to z-index:auto,
-            // effectively 0), including native form controls like <input>, without
-            // needing to elevate or otherwise modify Streamlit's own container.
-            canvas.style.zIndex = '-1';
+            // FIXED: Ensure canvas is positioned above background but behind content safely
+            canvas.style.zIndex = '0';
             canvas.style.pointerEvents = 'none';
-            canvas.style.background = 'radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%)';
+            parentDoc.body.style.backgroundColor = '#030712';
             parentDoc.body.appendChild(canvas);
 
             const ctx = canvas.getContext('2d');
 
             function applyResponsiveWidth() {
-                // On mobile, columns stack -- canvas should span full width so it
-                // sits behind ALL stacked content, not just a fixed left strip.
                 const widthFraction = isMobile() ? 1.0 : 0.5;
                 canvas.style.width = (widthFraction * 100) + 'vw';
                 canvas.style.height = '100vh';
@@ -80,8 +68,6 @@ split_layout_html = """
 
             function resize() {
                 const newFraction = applyResponsiveWidth();
-                // Re-seed element positions if the layout mode flipped (mobile<->desktop)
-                // so particles aren't stranded outside the new canvas bounds.
                 if (newFraction !== currentFraction) {
                     currentFraction = newFraction;
                     elements.forEach(el => {
@@ -91,7 +77,6 @@ split_layout_html = """
                 }
             }
             window.parent.addEventListener('resize', resize);
-
 
             // Interactive 3D Molecules, Nodes, & Glyphs
             const elements = [];
@@ -147,7 +132,6 @@ split_layout_html = """
                     ctx.rotate(this.angle);
 
                     if (this.type === 0) {
-                        // Node
                         ctx.beginPath();
                         ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
                         ctx.fillStyle = 'rgba(250, 204, 21, 0.85)';
@@ -155,7 +139,6 @@ split_layout_html = """
                         ctx.shadowColor = '#facc15';
                         ctx.fill();
                     } else if (this.type === 1) {
-                        // 3D Molecule
                         ctx.beginPath();
                         ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
                         ctx.fillStyle = 'rgba(244, 63, 94, 0.9)';
@@ -179,7 +162,6 @@ split_layout_html = """
                             ctx.fill();
                         }
                     } else {
-                        // Language Glyph
                         ctx.font = '14px Space Mono, monospace';
                         ctx.fillStyle = 'rgba(192, 132, 252, 0.7)';
                         ctx.fillText(this.glyph, 0, 0);
@@ -196,6 +178,13 @@ split_layout_html = """
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
+                // Add subtle background gradient matching theme
+                let bgGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 10, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height));
+                bgGrad.addColorStop(0, '#1e1b4b');
+                bgGrad.addColorStop(1, '#030712');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
                 for (let i = 0; i < elements.length; i++) {
                     elements[i].update();
                     elements[i].draw();
@@ -229,9 +218,13 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
 
-    /* Global Dark Theme */
+    /* Global Dark Theme - Make app container transparent so background canvas shows through */
     [data-testid="stAppViewContainer"] {
-        background-color: #030712;
+        background-color: transparent !important;
+    }
+    
+    [data-testid="stHeader"] {
+        background-color: transparent !important;
     }
 
     /* Left Hero Visual Card Styling */
@@ -243,17 +236,14 @@ st.markdown("""
         min-height: 85vh;
         text-align: center;
         padding: 40px;
+        position: relative;
+        z-index: 2;
     }
 
     @media (max-width: 640px) {
         .left-hero-container {
-            /* Restored to near-full-screen so the hero keeps its immersive feel
-               on mobile (the earlier compact version fixed the "form pushed
-               off-screen" bug, but felt flat). Left slightly under 100vh so a
-               sliver of the form card peeks in as a natural scroll cue. */
             min-height: 88vh;
             padding: 32px 16px 24px 16px;
-            position: relative;
         }
         .hero-circle-accent {
             width: 200px !important;
@@ -268,24 +258,6 @@ st.markdown("""
         }
         .hero-subtitle {
             font-size: 11px !important;
-        }
-        /* Animated scroll indicator so the search form isn't undiscoverable
-           below a near-full-screen hero */
-        .left-hero-container::after {
-            content: '↓ Scroll to search records';
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 11px;
-            color: rgba(250, 204, 21, 0.7);
-            letter-spacing: 0.5px;
-            animation: bobDown 2s ease-in-out infinite;
-        }
-        @keyframes bobDown {
-            0%, 100% { transform: translateY(0); opacity: 0.6; }
-            50% { transform: translateY(6px); opacity: 1; }
         }
     }
 
@@ -332,12 +304,15 @@ st.markdown("""
 
     /* Right Form Container Styling */
     .right-portal-card {
-        background: #0b1329;
+        background: rgba(11, 19, 41, 0.9);
+        backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 20px;
         padding: 32px;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
         margin-top: 20px;
+        position: relative;
+        z-index: 2;
     }
 
     .form-header-title {
@@ -359,8 +334,6 @@ st.markdown("""
             padding: 20px 16px;
             border-radius: 16px;
             margin-top: 12px;
-            /* Subtle accent so the card reads as a deliberate "next section"
-               after the scroll cue, rather than an abrupt drop */
             border-top: 2px solid rgba(250, 204, 21, 0.4);
         }
         .form-header-title { font-size: 20px; }
@@ -369,10 +342,6 @@ st.markdown("""
 
     /* Streamlit Input Overrides */
     .stTextInput > div > div {
-        /* FIXED: previous rgba(15,23,42,0.9) with a 0.12-alpha border was nearly
-           indistinguishable from the card background behind it on a dark theme --
-           measured pixel delta was ~0. Using a solid, distinctly lighter slate fill
-           and a visible gold-tinted border so the field reads as a real input. */
         background-color: #24304a !important;
         border: 1.5px solid rgba(250, 204, 21, 0.35) !important;
         border-radius: 12px !important;
@@ -381,7 +350,6 @@ st.markdown("""
     }
 
     .stTextInput input {
-        /* 16px minimum prevents iOS Safari from auto-zooming the page on focus */
         font-size: 16px !important;
     }
     
@@ -399,7 +367,6 @@ st.markdown("""
     }
 
     .stTabs [data-baseweb="tab"] {
-        /* Touch target height per mobile accessibility guidelines (~44px) */
         min-height: 44px;
         display: flex;
         align-items: center;
@@ -422,7 +389,6 @@ st.markdown("""
 
 # ===== UTILITY FUNCTIONS =====
 def validate_test_number(test_no):
-    # FIXED: character class was missing 'm' and 'a' (e.g. M4-25-01, A7-25-01 were rejected)
     pattern = r'^[JFMASONDjfmasond](1[0-2]|[1-9])-\d{2}-\d{2}$'
     return bool(re.match(pattern, test_no.strip()))
 
@@ -442,14 +408,12 @@ def format_percentage(val):
         f_val = float(str(val).replace('%', '').strip())
         if f_val <= 1.0:
             f_val = f_val * 100
-        # FIXED: clamp to 0-100 so malformed Excel data can't overflow the progress bar
         f_val = max(0.0, min(100.0, f_val))
         return f"{int(round(f_val))}%", f_val
     except Exception:
         return "0%", 0.0
 
 def get_excel_column(df, possible_names):
-    """Match a column name across common variants (SerialNumber, Serial Number, etc.)"""
     normalized_cols = {c.lower().replace(' ', '').replace('_', ''): c for c in df.columns}
     for name in possible_names:
         key = name.lower().replace(' ', '').replace('_', '')
@@ -471,8 +435,6 @@ def generate_report_card(serial_no, test_no, student_data):
     cls = escape(str(student_data.get('class', 'X')).strip())
     section = escape(str(student_data.get('section', 'A')).strip()[:2])
 
-    # FIXED: extract only the numeric rank so stray characters/line-breaks in the
-    # Excel cell (e.g. "#2\nND") can't corrupt the rendered value into "#2 N D"
     rank_raw = str(student_data.get('class_rank', 'N/A')).strip()
     rank_digits = re.search(r'\d+', rank_raw)
     rank = f"#{escape(rank_digits.group(0))}" if rank_digits else 'N/A'
@@ -714,22 +676,6 @@ def generate_report_card(serial_no, test_no, student_data):
                 letter-spacing: 1px;
                 text-transform: uppercase;
             }}
-
-            @media print {{
-                html, body {{
-                    background: #ffffff !important;
-                    margin: 0 !important;
-                }}
-                .cert-container {{
-                    box-shadow: none !important;
-                    border: 3px solid #b45309 !important;
-                    background: #090d16 !important;
-                    width: 100% !important;
-                }}
-                .print-btn {{
-                    display: none !important;
-                }}
-            }}
         </style>
     </head>
     <body>
@@ -793,17 +739,13 @@ def generate_report_card(serial_no, test_no, student_data):
                             <div class="seal-text-sub">Verified Digital Transcript</div>
                         </div>
                     </div>
-                    <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF Certificate</button>
+                    <button class="print-btn" onclick="window.print()">️ Print / Save PDF Certificate</button>
                 </div>
             </div>
         </div>
     </body>
     </html>
     """
-    # FIXED: iframe was hardcoded to 540px but actual rendered content measures
-    # 548-595px depending on name/subject length, clipping the bottom border and
-    # print button. Sized with margin for device font-metric variance, with
-    # scrolling enabled as a safety net rather than a hard guess.
     components.html(certificate_html, height=680, scrolling=True)
 
 # ===== 50/50 SPLIT SCREEN LAYOUT =====
@@ -843,7 +785,7 @@ with right_col:
             if os.path.exists(file_name):
                 st.success(f"✓ Active Exam Session: {cleaned_test}")
                 
-                scan_tab1, scan_tab2 = st.tabs(["📷 Camera Scan", "🖼️ Upload Picture"])
+                scan_tab1, scan_tab2 = st.tabs([" Camera Scan", "️ Upload Picture"])
                 scanned_serial = ""
 
                 with scan_tab1:
