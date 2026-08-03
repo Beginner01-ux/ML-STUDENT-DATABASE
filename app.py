@@ -247,22 +247,45 @@ st.markdown("""
 
     @media (max-width: 640px) {
         .left-hero-container {
-            min-height: auto;
-            padding: 24px 16px 16px 16px;
+            /* Restored to near-full-screen so the hero keeps its immersive feel
+               on mobile (the earlier compact version fixed the "form pushed
+               off-screen" bug, but felt flat). Left slightly under 100vh so a
+               sliver of the form card peeks in as a natural scroll cue. */
+            min-height: 88vh;
+            padding: 32px 16px 24px 16px;
+            position: relative;
         }
         .hero-circle-accent {
-            width: 120px !important;
-            height: 120px !important;
-            margin-bottom: 14px !important;
+            width: 200px !important;
+            height: 200px !important;
+            margin-bottom: 20px !important;
         }
         .hero-logo-text {
-            font-size: 42px !important;
+            font-size: 64px !important;
         }
         .hero-title {
-            font-size: 24px !important;
+            font-size: 28px !important;
         }
         .hero-subtitle {
-            font-size: 10px !important;
+            font-size: 11px !important;
+        }
+        /* Animated scroll indicator so the search form isn't undiscoverable
+           below a near-full-screen hero */
+        .left-hero-container::after {
+            content: '↓ Scroll to search records';
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 11px;
+            color: rgba(250, 204, 21, 0.7);
+            letter-spacing: 0.5px;
+            animation: bobDown 2s ease-in-out infinite;
+        }
+        @keyframes bobDown {
+            0%, 100% { transform: translateY(0); opacity: 0.6; }
+            50% { transform: translateY(6px); opacity: 1; }
         }
     }
 
@@ -336,6 +359,9 @@ st.markdown("""
             padding: 20px 16px;
             border-radius: 16px;
             margin-top: 12px;
+            /* Subtle accent so the card reads as a deliberate "next section"
+               after the scroll cue, rather than an abrupt drop */
+            border-top: 2px solid rgba(250, 204, 21, 0.4);
         }
         .form-header-title { font-size: 20px; }
         .form-header-sub { font-size: 11px; margin-bottom: 16px; }
@@ -774,7 +800,11 @@ def generate_report_card(serial_no, test_no, student_data):
     </body>
     </html>
     """
-    components.html(certificate_html, height=540, scrolling=False)
+    # FIXED: iframe was hardcoded to 540px but actual rendered content measures
+    # 548-595px depending on name/subject length, clipping the bottom border and
+    # print button. Sized with margin for device font-metric variance, with
+    # scrolling enabled as a safety net rather than a hard guess.
+    components.html(certificate_html, height=680, scrolling=True)
 
 # ===== 50/50 SPLIT SCREEN LAYOUT =====
 left_col, right_col = st.columns([1, 1], gap="large")
