@@ -20,7 +20,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ===== INJECT SPLIT-SCREEN LAYOUT & PRECISE DYNAMIC PHYSICS CANVAS =====
+# ===== INJECT SPLIT-SCREEN LAYOUT & CONTINUOUS MOTION CHEMISTRY/PHONETICS CANVAS =====
 split_layout_html = """
 <script>
     (function() {
@@ -81,15 +81,37 @@ split_layout_html = """
             }
             window.parent.addEventListener('resize', resize);
 
-            // Entities: Molecules, Phonetics, and Neural Nodes
             const entities = [];
-            const phoneticPairs = [
-                { a: 's', b: 'h', combined: 'sh' },
-                { a: 'c', b: 'h', combined: 'ch' },
-                { a: 'p', b: 'h', combined: 'ph' },
-                { a: 't', b: 'h', combined: 'th' }
+            
+            const atomTypes = [
+                { symbol: 'H', valency: 1, color: '#38bdf8', mass: 1 },
+                { symbol: 'O', valency: 2, color: '#f43f5e', mass: 16 },
+                { symbol: 'C', valency: 4, color: '#a855f7', mass: 12 },
+                { symbol: 'N', valency: 3, color: '#3b82f6', mass: 14 },
+                { symbol: 'Na', valency: 1, color: '#eab308', mass: 23 },
+                { symbol: 'Cl', valency: 1, color: '#22c55e', mass: 35 }
             ];
-            const entityCount = 28;
+
+            const phoneticPairs = [
+                { a: 's', b: 'h', result: 'sh' }, { a: 'c', b: 'h', result: 'ch' },
+                { a: 'p', b: 'h', result: 'ph' }, { a: 't', b: 'h', result: 'th' },
+                { a: 'w', b: 'h', result: 'wh' }, { a: 'q', b: 'u', result: 'qu' },
+                { a: 'b', b: 'l', result: 'bl' }, { a: 'b', b: 'r', result: 'br' },
+                { a: 'c', b: 'l', result: 'cl' }, { a: 'c', b: 'r', result: 'cr' },
+                { a: 'd', b: 'r', result: 'dr' }, { a: 'f', b: 'l', result: 'fl' },
+                { a: 'f', b: 'r', result: 'fr' }, { a: 'g', b: 'l', result: 'gl' },
+                { a: 'g', b: 'r', result: 'gr' }, { a: 'p', b: 'l', result: 'pl' },
+                { a: 'p', b: 'r', result: 'pr' }, { a: 's', b: 'c', result: 'sc' },
+                { a: 's', b: 'k', result: 'sk' }, { a: 's', b: 'l', result: 'sl' },
+                { a: 's', b: 'm', result: 'sm' }, { a: 's', b: 'n', result: 'sn' },
+                { a: 's', b: 'p', result: 'sp' }, { a: 's', b: 't', result: 'st' },
+                { a: 's', b: 'w', result: 'sw' }, { a: 't', b: 'r', result: 'tr' },
+                { a: 't', b: 'w', result: 'tw' }, { a: 'e', b: 'e', result: 'ee' },
+                { a: 'o', b: 'o', result: 'oo' }, { a: 'a', b: 'i', result: 'ai' },
+                { a: 'e', b: 'a', result: 'ea' }, { a: 'o', b: 'u', result: 'ou' }
+            ];
+
+            const entityCount = 32;
             let pointer = { x: null, y: null, radius: 130, active: false };
 
             function updatePointerPosition(clientX, clientY) {
@@ -153,17 +175,8 @@ split_layout_html = """
                     let dist = Math.sqrt(dx * dx + dy * dy);
                     if (dist < 200) {
                         let angle = Math.atan2(dy, dx);
-                        en.vx += Math.cos(angle) * 5;
-                        en.vy += Math.sin(angle) * 5;
-                        // Break bonds / split clusters on strong touch/click
-                        if (en.isLargeMolecule) {
-                            en.isLargeMolecule = false;
-                            en.radius = 12;
-                        }
-                        if (en.isCombinedPhonetic) {
-                            en.text = en.originalA;
-                            en.isCombinedPhonetic = false;
-                        }
+                        en.vx += Math.cos(angle) * 8;
+                        en.vy += Math.sin(angle) * 8;
                     }
                 });
             }
@@ -172,24 +185,30 @@ split_layout_html = """
                 constructor() {
                     this.x = Math.random() * canvas.width;
                     this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 1.0;
-                    this.vy = (Math.random() - 0.5) * 1.0;
+                    // Maintain continuous baseline velocity so motion never stops completely
+                    const minSpeed = 0.8;
+                    let angle = Math.random() * Math.PI * 2;
+                    let speed = minSpeed + Math.random() * 1.2;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed;
                     
-                    // Types: 0 = Molecule, 1 = Phonetic, 2 = Neural Node
                     this.category = Math.floor(Math.random() * 3);
                     this.radius = 12;
-                    
+
                     if (this.category === 0) {
-                        this.isLargeMolecule = false;
+                        let atom = atomTypes[Math.floor(Math.random() * atomTypes.length)];
+                        this.baseSymbol = atom.symbol;
+                        this.formula = atom.symbol;
+                        this.color = atom.color;
+                        this.valency = atom.valency;
+                        this.boundAtoms = [];
                     } else if (this.category === 1) {
                         let pair = phoneticPairs[Math.floor(Math.random() * phoneticPairs.length)];
                         this.originalA = pair.a;
                         this.originalB = pair.b;
-                        this.combinedText = pair.combined;
+                        this.combinedText = pair.result;
                         this.text = this.originalA;
-                        this.isCombinedPhonetic = false;
-                    } else {
-                        this.angle = Math.random() * Math.PI * 2;
+                        this.isCombined = false;
                     }
                 }
 
@@ -197,16 +216,23 @@ split_layout_html = """
                     this.x += this.vx;
                     this.y += this.vy;
 
-                    this.vx *= 0.99;
-                    this.vy *= 0.99;
+                    // Enforce a minimum perpetual velocity vector magnitude so motion never stops
+                    let currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                    if (currentSpeed < 0.75) {
+                        let boostAngle = Math.random() * Math.PI * 2;
+                        this.vx += Math.cos(boostAngle) * 0.5;
+                        this.vy += Math.sin(boostAngle) * 0.5;
+                    }
 
-                    // Wall collision
-                    if (this.x < this.radius) { this.x = this.radius; this.vx *= -1; }
-                    if (this.x > canvas.width - this.radius) { this.x = canvas.width - this.radius; this.vx *= -1; }
-                    if (this.y < this.radius) { this.y = this.radius; this.vy *= -1; }
-                    if (this.y > canvas.height - this.radius) { this.y = canvas.height - this.radius; this.vy *= -1; }
+                    // Damping with continuous energy floor
+                    this.vx *= 0.998;
+                    this.vy *= 0.998;
 
-                    // Logo Obstacle Repulsion
+                    if (this.x < this.radius) { this.x = this.radius; this.vx = Math.abs(this.vx) + 0.5; }
+                    if (this.x > canvas.width - this.radius) { this.x = canvas.width - this.radius; this.vx = -(Math.abs(this.vx) + 0.5); }
+                    if (this.y < this.radius) { this.y = this.radius; this.vy = Math.abs(this.vy) + 0.5; }
+                    if (this.y > canvas.height - this.radius) { this.y = canvas.height - this.radius; this.vy = -(Math.abs(this.vy) + 0.5); }
+
                     let logoCenterX = canvas.width / 2;
                     let logoCenterY = isMobile() ? canvas.height * 0.38 : canvas.height / 2;
                     let logoRadius = isMobile() ? 75 : 110;
@@ -220,19 +246,18 @@ split_layout_html = """
                         let angle = Math.atan2(lDy, lDx);
                         this.x = logoCenterX + Math.cos(angle) * minAllowedDist;
                         this.y = logoCenterY + Math.sin(angle) * minAllowedDist;
-                        this.vx += Math.cos(angle) * 0.8;
-                        this.vy += Math.sin(angle) * 0.8;
+                        this.vx += Math.cos(angle) * 1.2;
+                        this.vy += Math.sin(angle) * 1.2;
                     }
 
-                    // Mouse / Touch Repulsion
                     if (pointer.x !== null && pointer.y !== null) {
                         let dx = pointer.x - this.x;
                         let dy = pointer.y - this.y;
                         let dist = Math.sqrt(dx * dx + dy * dy);
                         if (dist < pointer.radius) {
                             let force = (pointer.radius - dist) / pointer.radius;
-                            this.x -= (dx / dist) * force * 3.0;
-                            this.y -= (dy / dist) * force * 3.0;
+                            this.vx -= (dx / dist) * force * 0.15;
+                            this.vy -= (dy / dist) * force * 0.15;
                         }
                     }
                 }
@@ -242,30 +267,28 @@ split_layout_html = """
                     ctx.translate(this.x, this.y);
 
                     if (this.category === 0) {
-                        // Molecule
-                        let r = this.isLargeMolecule ? 18 : 10;
+                        let isCompound = this.boundAtoms && this.boundAtoms.length > 0;
+                        let r = isCompound ? 18 : 13;
+                        
                         ctx.beginPath();
                         ctx.arc(0, 0, r, 0, Math.PI * 2);
-                        ctx.fillStyle = this.isLargeMolecule ? 'rgba(234, 179, 8, 0.95)' : 'rgba(244, 63, 94, 0.9)';
-                        ctx.shadowBlur = this.isLargeMolecule ? 15 : 6;
-                        ctx.shadowColor = this.isLargeMolecule ? '#facc15' : '#f43f5e';
+                        ctx.fillStyle = isCompound ? 'rgba(250, 204, 21, 0.95)' : (this.color || 'rgba(56, 189, 248, 0.9)');
+                        ctx.shadowBlur = isCompound ? 15 : 6;
+                        ctx.shadowColor = isCompound ? '#facc15' : (this.color || '#38bdf8');
                         ctx.fill();
 
-                        // Inner orbital dots for molecules
-                        if (this.isLargeMolecule) {
-                            ctx.beginPath();
-                            ctx.arc(8, 0, 4, 0, Math.PI * 2);
-                            ctx.arc(-8, 0, 4, 0, Math.PI * 2);
-                            ctx.fillStyle = 'rgba(56, 189, 248, 0.9)';
-                            ctx.fill();
-                        }
+                        ctx.font = 'bold 11px Space Grotesk, sans-serif';
+                        ctx.fillStyle = isCompound ? '#000000' : '#ffffff';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(this.formula, 0, 1);
                     } else if (this.category === 1) {
-                        // Phonetic character / Joined sound
                         ctx.font = 'bold 13px Space Mono, monospace';
-                        ctx.fillStyle = this.isCombinedPhonetic ? 'rgba(250, 204, 21, 0.95)' : 'rgba(192, 132, 252, 0.9)';
-                        ctx.fillText(this.text, -6, 4);
+                        ctx.fillStyle = this.isCombined ? 'rgba(250, 204, 21, 0.95)' : 'rgba(192, 132, 252, 0.9)';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(this.text, 0, 0);
                     } else {
-                        // Neural Node
                         ctx.beginPath();
                         ctx.arc(0, 0, 4, 0, Math.PI * 2);
                         ctx.fillStyle = 'rgba(56, 189, 248, 0.95)';
@@ -300,46 +323,80 @@ split_layout_html = """
                         let dy = entities[i].y - entities[j].y;
                         let dist = Math.sqrt(dx * dx + dy * dy);
 
-                        // Basic collision bounce
-                        if (dist < 26) {
+                        if (dist < 28) {
                             let angle = Math.atan2(dy, dx);
-                            let push = (26 - dist) * 0.05;
+                            let push = 0.8;
                             entities[i].vx += Math.cos(angle) * push;
                             entities[i].vy += Math.sin(angle) * push;
                             entities[j].vx -= Math.cos(angle) * push;
                             entities[j].vy -= Math.sin(angle) * push;
                         }
 
-                        // 1. Molecular Bonding & Breaking (Molecule + Molecule -> Larger Molecule & vice versa)
-                        if (entities[i].category === 0 && entities[j].category === 0 && dist < 45) {
-                            if (!entities[i].isLargeMolecule && !entities[j].isLargeMolecule) {
-                                // Bond and form larger molecule
-                                entities[i].isLargeMolecule = true;
-                                entities[j].isLargeMolecule = false;
-                            } else if (entities[i].isLargeMolecule && entities[j].isLargeMolecule) {
-                                // Collision between two large molecules breaks them apart
-                                entities[i].isLargeMolecule = false;
-                                entities[j].isLargeMolecule = false;
+                        if (entities[i].category === 0 && entities[j].category === 0 && dist < 42) {
+                            let a1 = entities[i];
+                            let a2 = entities[j];
+                            
+                            if ((a1.boundAtoms.length === 0) && (a2.boundAtoms.length === 0)) {
+                                let syms = [a1.baseSymbol, a2.baseSymbol].sort().join('');
+                                if (syms === 'HO' || syms === 'H2O') {
+                                    a1.boundAtoms.push(a2);
+                                    a1.formula = 'H₂O';
+                                    a2.formula = '';
+                                } else if (syms === 'ClNa') {
+                                    a1.boundAtoms.push(a2);
+                                    a1.formula = 'NaCl';
+                                    a2.formula = '';
+                                } else if (syms === 'CO') {
+                                    a1.boundAtoms.push(a2);
+                                    a1.formula = 'CO';
+                                    a2.formula = '';
+                                } else if (a1.baseSymbol === a2.baseSymbol && a1.baseSymbol === 'H') {
+                                    a1.boundAtoms.push(a2);
+                                    a1.formula = 'H₂';
+                                    a2.formula = '';
+                                } else if (a1.baseSymbol === a2.baseSymbol && a1.baseSymbol === 'O') {
+                                    a1.boundAtoms.push(a2);
+                                    a1.formula = 'O₂';
+                                    a2.formula = '';
+                                }
+                            } else if ((a1.boundAtoms.length > 0 && a1.boundAtoms.includes(a2)) || 
+                                       (a2.boundAtoms.length > 0 && a2.boundAtoms.includes(a1))) {
+                                a1.boundAtoms = [];
+                                a1.formula = a1.baseSymbol;
+                                a2.boundAtoms = [];
+                                a2.formula = a2.baseSymbol;
+                            }
+
+                            if (a1.boundAtoms.includes(a2) || a2.boundAtoms.includes(a1)) {
+                                ctx.beginPath();
+                                ctx.moveTo(a1.x, a1.y);
+                                ctx.lineTo(a2.x, a2.y);
+                                ctx.strokeStyle = 'rgba(250, 204, 21, 0.8)';
+                                ctx.lineWidth = 2.0;
+                                ctx.stroke();
                             }
                         }
 
-                        // 2. Phonetic Joining & Breaking (Phonetic + Phonetic -> Combined Sound e.g. sh & vice versa)
                         if (entities[i].category === 1 && entities[j].category === 1 && dist < 40) {
-                            if (!entities[i].isCombinedPhonetic && !entities[j].isCombinedPhonetic) {
-                                entities[i].text = entities[i].combinedText;
-                                entities[i].isCombinedPhonetic = true;
-                                entities[j].text = entities[j].combinedText;
-                                entities[j].isCombinedPhonetic = true;
-                            } else if (entities[i].isCombinedPhonetic && entities[j].isCombinedPhonetic) {
-                                // Break apart
-                                entities[i].text = entities[i].originalA;
-                                entities[i].isCombinedPhonetic = false;
-                                entities[j].text = entities[j].originalA;
-                                entities[j].isCombinedPhonetic = false;
+                            let p1 = entities[i];
+                            let p2 = entities[j];
+                            if (!p1.isCombined && !p2.isCombined) {
+                                if ((p1.text === p1.originalA && p2.text === p2.originalA) ||
+                                    (p1.text === p1.originalA && p2.text === p2.originalB) ||
+                                    (p1.originalA === p2.originalA && p1.originalB === p2.originalB)) {
+                                    p1.text = p1.combinedText;
+                                    p1.isCombined = true;
+                                    p2.text = p2.combinedText;
+                                    p2.isCombined = true;
+                                }
+                            } else if (p1.isCombined && p2.isCombined) {
+                                p1.text = p1.originalA;
+                                p1.isCombined = false;
+                                p2.text = p2.originalA;
+                                p2.isCombined = false;
                             }
                         }
 
-                        // 3. Neural Network Web (Nodes act like a neural network web)
                         if (entities[i].category === 2 && entities[j].category === 2 && dist < 95) {
                             ctx.beginPath();
                             ctx.moveTo(entities[i].x, entities[i].y);
@@ -359,7 +416,7 @@ split_layout_html = """
 """
 components.html(split_layout_html, height=0)
 
-# ===== GLOBAL STYLING OVERRIDES & PRINT HIDE RULE =====
+# ===== GLOBAL STYLING OVERRIDES =====
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
@@ -529,13 +586,6 @@ st.markdown("""
         background-color: #facc15 !important;
         color: #000000 !important;
         font-weight: 700 !important;
-    }
-
-    @media (max-width: 640px) {
-        .stTabs [data-baseweb="tab"] {
-            font-size: 13px;
-            padding: 0 10px;
-        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -742,15 +792,6 @@ def generate_report_card(serial_no, test_no, student_data):
                 margin-top: 2px;
                 word-wrap: break-word;
                 overflow-wrap: break-word;
-            }}
-
-            @media (max-width: 480px) {{
-                .metrics-grid {{
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 6px;
-                }}
-                .metric-value {{ font-size: 14px; }}
-                .metric-title {{ font-size: 7px; }}
             }}
 
             .info-grid {{
