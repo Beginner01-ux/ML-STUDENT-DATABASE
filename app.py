@@ -47,7 +47,6 @@ split_layout_html = """
             canvas.style.position = 'fixed';
             canvas.style.top = '0';
             canvas.style.left = '0';
-            // FIXED: Ensure canvas is positioned above background but behind content safely
             canvas.style.zIndex = '0';
             canvas.style.pointerEvents = 'none';
             parentDoc.body.style.backgroundColor = '#030712';
@@ -55,25 +54,31 @@ split_layout_html = """
 
             const ctx = canvas.getContext('2d');
 
-            function applyResponsiveWidth() {
-                const widthFraction = isMobile() ? 1.0 : 0.5;
+            function applyResponsiveDimensions() {
+                const mobile = isMobile();
+                const widthFraction = mobile ? 1.0 : 0.5;
+                const heightFraction = mobile ? 0.45 : 1.0;
+                
                 canvas.style.width = (widthFraction * 100) + 'vw';
-                canvas.style.height = '100vh';
+                canvas.style.height = (heightFraction * 100) + 'vh';
                 canvas.width = window.parent.innerWidth * widthFraction;
-                canvas.height = window.parent.innerHeight;
-                return widthFraction;
+                canvas.height = window.parent.innerHeight * heightFraction;
+                return mobile;
             }
 
-            let currentFraction = applyResponsiveWidth();
+            let currentMobile = applyResponsiveDimensions();
 
             function resize() {
-                const newFraction = applyResponsiveWidth();
-                if (newFraction !== currentFraction) {
-                    currentFraction = newFraction;
+                const mobile = isMobile();
+                if (mobile !== currentMobile) {
+                    currentMobile = mobile;
+                    applyResponsiveDimensions();
                     elements.forEach(el => {
                         el.x = Math.random() * canvas.width;
                         el.y = Math.random() * canvas.height;
                     });
+                } else {
+                    applyResponsiveDimensions();
                 }
             }
             window.parent.addEventListener('resize', resize);
@@ -81,11 +86,11 @@ split_layout_html = """
             // Interactive 3D Molecules, Nodes, & Glyphs
             const elements = [];
             const glyphs = ['α', 'β', 'Ω', '∫', 'æ', 'θ', 'λ', '∑', 'ð'];
-            const elementCount = 40;
-            let mouse = { x: null, y: null, radius: 140 };
+            const elementCount = 30;
+            let mouse = { x: null, y: null, radius: 120 };
 
             window.parent.addEventListener('mousemove', (e) => {
-                if (e.clientX <= window.parent.innerWidth * 0.5) {
+                if (!isMobile() && e.clientX <= window.parent.innerWidth * 0.5) {
                     mouse.x = e.clientX;
                     mouse.y = e.clientY;
                 } else {
@@ -98,8 +103,8 @@ split_layout_html = """
                 constructor() {
                     this.x = Math.random() * canvas.width;
                     this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 0.6;
-                    this.vy = (Math.random() - 0.5) * 0.6;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
                     this.type = Math.floor(Math.random() * 3);
                     this.glyph = glyphs[Math.floor(Math.random() * glyphs.length)];
                     this.angle = Math.random() * Math.PI * 2;
@@ -133,36 +138,36 @@ split_layout_html = """
 
                     if (this.type === 0) {
                         ctx.beginPath();
-                        ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+                        ctx.arc(0, 0, 3, 0, Math.PI * 2);
                         ctx.fillStyle = 'rgba(250, 204, 21, 0.85)';
-                        ctx.shadowBlur = 10;
+                        ctx.shadowBlur = 8;
                         ctx.shadowColor = '#facc15';
                         ctx.fill();
                     } else if (this.type === 1) {
                         ctx.beginPath();
-                        ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+                        ctx.arc(0, 0, 4, 0, Math.PI * 2);
                         ctx.fillStyle = 'rgba(244, 63, 94, 0.9)';
                         ctx.fill();
 
                         for (let i = 0; i < 3; i++) {
                             let bAngle = (i * Math.PI * 2 / 3);
-                            let bx = Math.cos(bAngle) * 14;
-                            let by = Math.sin(bAngle) * 14;
+                            let bx = Math.cos(bAngle) * 12;
+                            let by = Math.sin(bAngle) * 12;
 
                             ctx.beginPath();
                             ctx.moveTo(0, 0);
                             ctx.lineTo(bx, by);
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
                             ctx.lineWidth = 1;
                             ctx.stroke();
 
                             ctx.beginPath();
-                            ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
+                            ctx.arc(bx, by, 2, 0, Math.PI * 2);
                             ctx.fillStyle = 'rgba(56, 189, 248, 0.85)';
                             ctx.fill();
                         }
                     } else {
-                        ctx.font = '14px Space Mono, monospace';
+                        ctx.font = '13px Space Mono, monospace';
                         ctx.fillStyle = 'rgba(192, 132, 252, 0.7)';
                         ctx.fillText(this.glyph, 0, 0);
                     }
@@ -178,7 +183,6 @@ split_layout_html = """
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // Add subtle background gradient matching theme
                 let bgGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 10, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height));
                 bgGrad.addColorStop(0, '#1e1b4b');
                 bgGrad.addColorStop(1, '#030712');
@@ -194,11 +198,11 @@ split_layout_html = """
                         let dy = elements[i].y - elements[j].y;
                         let dist = Math.sqrt(dx * dx + dy * dy);
 
-                        if (dist < 110) {
+                        if (dist < 100) {
                             ctx.beginPath();
                             ctx.moveTo(elements[i].x, elements[i].y);
                             ctx.lineTo(elements[j].x, elements[j].y);
-                            ctx.strokeStyle = `rgba(250, 204, 21, ${0.15 * (1 - dist / 110)})`;
+                            ctx.strokeStyle = `rgba(250, 204, 21, ${0.15 * (1 - dist / 100)})`;
                             ctx.lineWidth = 0.5;
                             ctx.stroke();
                         }
@@ -218,7 +222,6 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
 
-    /* Global Dark Theme - Make app container transparent so background canvas shows through */
     [data-testid="stAppViewContainer"] {
         background-color: transparent !important;
     }
@@ -227,7 +230,11 @@ st.markdown("""
         background-color: transparent !important;
     }
 
-    /* Left Hero Visual Card Styling */
+    [data-testid="stVerticalBlock"] {
+        position: relative;
+        z-index: 5;
+    }
+
     .left-hero-container {
         display: flex;
         flex-direction: column;
@@ -237,27 +244,27 @@ st.markdown("""
         text-align: center;
         padding: 40px;
         position: relative;
-        z-index: 2;
+        z-index: 5;
     }
 
     @media (max-width: 640px) {
         .left-hero-container {
-            min-height: 88vh;
-            padding: 32px 16px 24px 16px;
+            min-height: 45vh;
+            padding: 24px 16px 16px 16px;
         }
         .hero-circle-accent {
-            width: 200px !important;
-            height: 200px !important;
-            margin-bottom: 20px !important;
+            width: 150px !important;
+            height: 150px !important;
+            margin-bottom: 14px !important;
         }
         .hero-logo-text {
-            font-size: 64px !important;
+            font-size: 48px !important;
         }
         .hero-title {
-            font-size: 28px !important;
+            font-size: 24px !important;
         }
         .hero-subtitle {
-            font-size: 11px !important;
+            font-size: 10px !important;
         }
     }
 
@@ -272,7 +279,7 @@ st.markdown("""
         align-items: center;
         justify-content: center;
         margin-bottom: 24px;
-        z-index: 2;
+        z-index: 5;
     }
 
     .hero-logo-text {
@@ -302,17 +309,16 @@ st.markdown("""
         margin-top: 8px;
     }
 
-    /* Right Form Container Styling */
     .right-portal-card {
-        background: rgba(11, 19, 41, 0.9);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(11, 19, 41, 0.95);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 20px;
         padding: 32px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
         margin-top: 20px;
         position: relative;
-        z-index: 2;
+        z-index: 10;
     }
 
     .form-header-title {
@@ -331,16 +337,15 @@ st.markdown("""
 
     @media (max-width: 640px) {
         .right-portal-card {
-            padding: 20px 16px;
+            padding: 24px 18px;
             border-radius: 16px;
             margin-top: 12px;
-            border-top: 2px solid rgba(250, 204, 21, 0.4);
+            border-top: 2px solid rgba(250, 204, 21, 0.5);
         }
         .form-header-title { font-size: 20px; }
         .form-header-sub { font-size: 11px; margin-bottom: 16px; }
     }
 
-    /* Streamlit Input Overrides */
     .stTextInput > div > div {
         background-color: #24304a !important;
         border: 1.5px solid rgba(250, 204, 21, 0.35) !important;
@@ -360,7 +365,7 @@ st.markdown("""
 
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
-        background-color: rgba(15, 23, 42, 0.6);
+        background-color: rgba(15, 23, 42, 0.8);
         padding: 6px;
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.05);
