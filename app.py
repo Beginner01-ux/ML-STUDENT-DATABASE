@@ -20,7 +20,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ===== INJECT SPLIT-SCREEN LAYOUT & ADVANCED BONDING PHYSICS CANVAS =====
+# ===== INJECT SPLIT-SCREEN LAYOUT & PRECISE DYNAMIC PHYSICS CANVAS =====
 split_layout_html = """
 <script>
     (function() {
@@ -71,9 +71,9 @@ split_layout_html = """
                 if (mobile !== currentMobile) {
                     currentMobile = mobile;
                     applyResponsiveDimensions();
-                    elements.forEach(el => {
-                        el.x = Math.random() * canvas.width;
-                        el.y = Math.random() * canvas.height;
+                    entities.forEach(en => {
+                        en.x = Math.random() * canvas.width;
+                        en.y = Math.random() * canvas.height;
                     });
                 } else {
                     applyResponsiveDimensions();
@@ -81,11 +81,16 @@ split_layout_html = """
             }
             window.parent.addEventListener('resize', resize);
 
-            // Molecular & Phonetic Bonding Physics Elements
-            const elements = [];
-            const glyphs = ['α', 'β', 'Ω', '∫', 'æ', 'θ', 'λ', '∑', 'ð', 'DATA', 'EXAM', 'ML', 'PASS', 'NODE'];
-            const elementCount = 32;
-            let pointer = { x: null, y: null, radius: 140, active: false };
+            // Entities: Molecules, Phonetics, and Neural Nodes
+            const entities = [];
+            const phoneticPairs = [
+                { a: 's', b: 'h', combined: 'sh' },
+                { a: 'c', b: 'h', combined: 'ch' },
+                { a: 'p', b: 'h', combined: 'ph' },
+                { a: 't', b: 'h', combined: 'th' }
+            ];
+            const entityCount = 28;
+            let pointer = { x: null, y: null, radius: 130, active: false };
 
             function updatePointerPosition(clientX, clientY) {
                 const rect = canvas.getBoundingClientRect();
@@ -142,51 +147,66 @@ split_layout_html = """
 
             function triggerPulse(px, py) {
                 if (px === null || py === null) return;
-                elements.forEach(el => {
-                    let dx = el.x - px;
-                    let dy = el.y - py;
+                entities.forEach(en => {
+                    let dx = en.x - px;
+                    let dy = en.y - py;
                     let dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 220) {
+                    if (dist < 200) {
                         let angle = Math.atan2(dy, dx);
-                        el.vx += Math.cos(angle) * 6;
-                        el.vy += Math.sin(angle) * 6;
-                        // Break bonds on strong pulse/touch
-                        el.bondedTo = null;
-                        el.clusterScale = 1.0;
+                        en.vx += Math.cos(angle) * 5;
+                        en.vy += Math.sin(angle) * 5;
+                        // Break bonds / split clusters on strong touch/click
+                        if (en.isLargeMolecule) {
+                            en.isLargeMolecule = false;
+                            en.radius = 12;
+                        }
+                        if (en.isCombinedPhonetic) {
+                            en.text = en.originalA;
+                            en.isCombinedPhonetic = false;
+                        }
                     }
                 });
             }
 
-            class FloatingElement {
+            class Entity {
                 constructor() {
                     this.x = Math.random() * canvas.width;
                     this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 1.2;
-                    this.vy = (Math.random() - 0.5) * 1.2;
-                    this.radius = 14;
-                    this.type = Math.floor(Math.random() * 3);
-                    this.glyph = glyphs[Math.floor(Math.random() * glyphs.length)];
-                    this.angle = Math.random() * Math.PI * 2;
-                    this.spin = (Math.random() - 0.5) * 0.03;
-                    this.bondedTo = null; // Dynamic bonding reference
-                    this.clusterScale = 1.0;
+                    this.vx = (Math.random() - 0.5) * 1.0;
+                    this.vy = (Math.random() - 0.5) * 1.0;
+                    
+                    // Types: 0 = Molecule, 1 = Phonetic, 2 = Neural Node
+                    this.category = Math.floor(Math.random() * 3);
+                    this.radius = 12;
+                    
+                    if (this.category === 0) {
+                        this.isLargeMolecule = false;
+                    } else if (this.category === 1) {
+                        let pair = phoneticPairs[Math.floor(Math.random() * phoneticPairs.length)];
+                        this.originalA = pair.a;
+                        this.originalB = pair.b;
+                        this.combinedText = pair.combined;
+                        this.text = this.originalA;
+                        this.isCombinedPhonetic = false;
+                    } else {
+                        this.angle = Math.random() * Math.PI * 2;
+                    }
                 }
 
                 update() {
                     this.x += this.vx;
                     this.y += this.vy;
-                    this.angle += this.spin;
 
-                    this.vx *= 0.985;
-                    this.vy *= 0.985;
+                    this.vx *= 0.99;
+                    this.vy *= 0.99;
 
-                    // Wall boundaries
-                    if (this.x < this.radius) { this.x = this.radius; this.vx *= -1; this.bondedTo = null; }
-                    if (this.x > canvas.width - this.radius) { this.x = canvas.width - this.radius; this.vx *= -1; this.bondedTo = null; }
-                    if (this.y < this.radius) { this.y = this.radius; this.vy *= -1; this.bondedTo = null; }
-                    if (this.y > canvas.height - this.radius) { this.y = canvas.height - this.radius; this.vy *= -1; this.bondedTo = null; }
+                    // Wall collision
+                    if (this.x < this.radius) { this.x = this.radius; this.vx *= -1; }
+                    if (this.x > canvas.width - this.radius) { this.x = canvas.width - this.radius; this.vx *= -1; }
+                    if (this.y < this.radius) { this.y = this.radius; this.vy *= -1; }
+                    if (this.y > canvas.height - this.radius) { this.y = canvas.height - this.radius; this.vy *= -1; }
 
-                    // Central Logo Circle obstacle interaction
+                    // Logo Obstacle Repulsion
                     let logoCenterX = canvas.width / 2;
                     let logoCenterY = isMobile() ? canvas.height * 0.38 : canvas.height / 2;
                     let logoRadius = isMobile() ? 75 : 110;
@@ -200,9 +220,8 @@ split_layout_html = """
                         let angle = Math.atan2(lDy, lDx);
                         this.x = logoCenterX + Math.cos(angle) * minAllowedDist;
                         this.y = logoCenterY + Math.sin(angle) * minAllowedDist;
-                        this.vx += Math.cos(angle) * 1.0;
-                        this.vy += Math.sin(angle) * 1.0;
-                        this.bondedTo = null;
+                        this.vx += Math.cos(angle) * 0.8;
+                        this.vy += Math.sin(angle) * 0.8;
                     }
 
                     // Mouse / Touch Repulsion
@@ -212,9 +231,8 @@ split_layout_html = """
                         let dist = Math.sqrt(dx * dx + dy * dy);
                         if (dist < pointer.radius) {
                             let force = (pointer.radius - dist) / pointer.radius;
-                            this.x -= (dx / dist) * force * 4.0;
-                            this.y -= (dy / dist) * force * 4.0;
-                            this.bondedTo = null;
+                            this.x -= (dx / dist) * force * 3.0;
+                            this.y -= (dy / dist) * force * 3.0;
                         }
                     }
                 }
@@ -222,55 +240,46 @@ split_layout_html = """
                 draw() {
                     ctx.save();
                     ctx.translate(this.x, this.y);
-                    ctx.rotate(this.angle);
-                    let scale = this.clusterScale;
-                    ctx.scale(scale, scale);
 
-                    if (this.type === 0) {
-                        // Atom Node
+                    if (this.category === 0) {
+                        // Molecule
+                        let r = this.isLargeMolecule ? 18 : 10;
                         ctx.beginPath();
-                        ctx.arc(0, 0, 4, 0, Math.PI * 2);
-                        ctx.fillStyle = 'rgba(250, 204, 21, 0.95)';
-                        ctx.shadowBlur = 12;
-                        ctx.shadowColor = '#facc15';
-                        ctx.fill();
-                    } else if (this.type === 1) {
-                        // Molecule Compound
-                        ctx.beginPath();
-                        ctx.arc(0, 0, 5, 0, Math.PI * 2);
-                        ctx.fillStyle = 'rgba(244, 63, 94, 0.95)';
+                        ctx.arc(0, 0, r, 0, Math.PI * 2);
+                        ctx.fillStyle = this.isLargeMolecule ? 'rgba(234, 179, 8, 0.95)' : 'rgba(244, 63, 94, 0.9)';
+                        ctx.shadowBlur = this.isLargeMolecule ? 15 : 6;
+                        ctx.shadowColor = this.isLargeMolecule ? '#facc15' : '#f43f5e';
                         ctx.fill();
 
-                        for (let i = 0; i < 3; i++) {
-                            let bAngle = (i * Math.PI * 2 / 3);
-                            let bx = Math.cos(bAngle) * 15;
-                            let by = Math.sin(bAngle) * 15;
-
+                        // Inner orbital dots for molecules
+                        if (this.isLargeMolecule) {
                             ctx.beginPath();
-                            ctx.moveTo(0, 0);
-                            ctx.lineTo(bx, by);
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                            ctx.lineWidth = 1.2;
-                            ctx.stroke();
-
-                            ctx.beginPath();
-                            ctx.arc(bx, by, 3, 0, Math.PI * 2);
-                            ctx.fillStyle = 'rgba(56, 189, 248, 0.95)';
+                            ctx.arc(8, 0, 4, 0, Math.PI * 2);
+                            ctx.arc(-8, 0, 4, 0, Math.PI * 2);
+                            ctx.fillStyle = 'rgba(56, 189, 248, 0.9)';
                             ctx.fill();
                         }
+                    } else if (this.category === 1) {
+                        // Phonetic character / Joined sound
+                        ctx.font = 'bold 13px Space Mono, monospace';
+                        ctx.fillStyle = this.isCombinedPhonetic ? 'rgba(250, 204, 21, 0.95)' : 'rgba(192, 132, 252, 0.9)';
+                        ctx.fillText(this.text, -6, 4);
                     } else {
-                        // Phonetic / Word Tag
-                        ctx.font = 'bold 12px Space Mono, monospace';
-                        ctx.fillStyle = 'rgba(192, 132, 252, 0.9)';
-                        ctx.fillText(this.glyph, -10, 4);
+                        // Neural Node
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(56, 189, 248, 0.95)';
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = '#38bdf8';
+                        ctx.fill();
                     }
 
                     ctx.restore();
                 }
             }
 
-            for (let i = 0; i < elementCount; i++) {
-                elements.push(new FloatingElement());
+            for (let i = 0; i < entityCount; i++) {
+                entities.push(new Entity());
             }
 
             function animate() {
@@ -282,51 +291,61 @@ split_layout_html = """
                 ctx.fillStyle = bgGrad;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                for (let i = 0; i < elements.length; i++) {
-                    elements[i].update();
-                    elements[i].draw();
+                for (let i = 0; i < entities.length; i++) {
+                    entities[i].update();
+                    entities[i].draw();
 
-                    for (let j = i + 1; j < elements.length; j++) {
-                        let dx = elements[i].x - elements[j].x;
-                        let dy = elements[i].y - elements[j].y;
+                    for (let j = i + 1; j < entities.length; j++) {
+                        let dx = entities[i].x - entities[j].x;
+                        let dy = entities[i].y - entities[j].y;
                         let dist = Math.sqrt(dx * dx + dy * dy);
 
-                        // Elastic collision
-                        if (dist < 30) {
+                        // Basic collision bounce
+                        if (dist < 26) {
                             let angle = Math.atan2(dy, dx);
-                            let push = (30 - dist) * 0.08;
-                            elements[i].vx += Math.cos(angle) * push;
-                            elements[i].vy += Math.sin(angle) * push;
-                            elements[j].vx -= Math.cos(angle) * push;
-                            elements[j].vy -= Math.sin(angle) * push;
+                            let push = (26 - dist) * 0.05;
+                            entities[i].vx += Math.cos(angle) * push;
+                            entities[i].vy += Math.sin(angle) * push;
+                            entities[j].vx -= Math.cos(angle) * push;
+                            entities[j].vy -= Math.sin(angle) * push;
                         }
 
-                        // Molecular Bonding & Phonetic Word Merging Physics
-                        if (dist < 65) {
-                            // Pull towards each other like chemical bonds / phonetics forming words
-                            let pullAngle = Math.atan2(dy, dx);
-                            let pullForce = 0.015;
-                            elements[i].vx -= Math.cos(pullAngle) * pullForce;
-                            elements[i].vy -= Math.sin(pullAngle) * pullForce;
-                            elements[j].vx += Math.cos(pullAngle) * pullForce;
-                            elements[j].vy += Math.sin(pullAngle) * pullForce;
-
-                            // When very close, simulate joining into a bigger cluster / word molecule
-                            if (dist < 38) {
-                                elements[i].clusterScale = 1.25;
-                                elements[j].clusterScale = 1.25;
-                                elements[i].bondedTo = j;
-                            } else {
-                                elements[i].clusterScale = 1.0;
-                                elements[j].clusterScale = 1.0;
+                        // 1. Molecular Bonding & Breaking (Molecule + Molecule -> Larger Molecule & vice versa)
+                        if (entities[i].category === 0 && entities[j].category === 0 && dist < 45) {
+                            if (!entities[i].isLargeMolecule && !entities[j].isLargeMolecule) {
+                                // Bond and form larger molecule
+                                entities[i].isLargeMolecule = true;
+                                entities[j].isLargeMolecule = false;
+                            } else if (entities[i].isLargeMolecule && entities[j].isLargeMolecule) {
+                                // Collision between two large molecules breaks them apart
+                                entities[i].isLargeMolecule = false;
+                                entities[j].isLargeMolecule = false;
                             }
+                        }
 
-                            // Draw glowing bond / chemical link
+                        // 2. Phonetic Joining & Breaking (Phonetic + Phonetic -> Combined Sound e.g. sh & vice versa)
+                        if (entities[i].category === 1 && entities[j].category === 1 && dist < 40) {
+                            if (!entities[i].isCombinedPhonetic && !entities[j].isCombinedPhonetic) {
+                                entities[i].text = entities[i].combinedText;
+                                entities[i].isCombinedPhonetic = true;
+                                entities[j].text = entities[j].combinedText;
+                                entities[j].isCombinedPhonetic = true;
+                            } else if (entities[i].isCombinedPhonetic && entities[j].isCombinedPhonetic) {
+                                // Break apart
+                                entities[i].text = entities[i].originalA;
+                                entities[i].isCombinedPhonetic = false;
+                                entities[j].text = entities[j].originalA;
+                                entities[j].isCombinedPhonetic = false;
+                            }
+                        }
+
+                        // 3. Neural Network Web (Nodes act like a neural network web)
+                        if (entities[i].category === 2 && entities[j].category === 2 && dist < 95) {
                             ctx.beginPath();
-                            ctx.moveTo(elements[i].x, elements[i].y);
-                            ctx.lineTo(elements[j].x, elements[j].y);
-                            ctx.strokeStyle = `rgba(250, 204, 21, ${0.45 * (1 - dist / 65)})`;
-                            ctx.lineWidth = dist < 38 ? 2.0 : 0.8;
+                            ctx.moveTo(entities[i].x, entities[i].y);
+                            ctx.lineTo(entities[j].x, entities[j].y);
+                            ctx.strokeStyle = `rgba(56, 189, 248, ${0.35 * (1 - dist / 95)})`;
+                            ctx.lineWidth = 0.8;
                             ctx.stroke();
                         }
                     }
