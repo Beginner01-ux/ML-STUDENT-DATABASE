@@ -33,14 +33,13 @@ split_layout_html = """
             mainBlock.style.maxWidth = '100vw';
             mainBlock.style.padding = '0';
             mainBlock.style.margin = '0';
-            // FIXED: the canvas below is appended as the LAST child of <body>,
-            // which under some browser stacking rules can paint over native form
-            // controls (e.g. text inputs) even with pointer-events:none on the
-            // canvas -- the input stayed clickable but became visually obscured.
-            // Explicitly raising the real content above it guarantees it always
-            // wins regardless of DOM append order.
-            mainBlock.style.position = 'relative';
-            mainBlock.style.zIndex = '1';
+            // NOTE: an earlier attempt fixed a canvas-paints-over-input issue by
+            // setting mainBlock.style.position='relative' + zIndex='1' here.
+            // That touches Streamlit's own internal container, which this app
+            // doesn't fully control the layout/overflow behavior of -- it caused
+            // the entire right column (form card + input) to stop rendering on
+            // mobile. Reverted. The canvas is pushed behind everything instead
+            // (below), which only touches an element this script owns directly.
         }
 
         function isMobile() {
@@ -55,7 +54,11 @@ split_layout_html = """
             canvas.style.position = 'fixed';
             canvas.style.top = '0';
             canvas.style.left = '0';
-            canvas.style.zIndex = '0';
+            // FIXED: negative z-index guarantees this decorative canvas always
+            // paints behind normal page content (which defaults to z-index:auto,
+            // effectively 0), including native form controls like <input>, without
+            // needing to elevate or otherwise modify Streamlit's own container.
+            canvas.style.zIndex = '-1';
             canvas.style.pointerEvents = 'none';
             canvas.style.background = 'radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%)';
             parentDoc.body.appendChild(canvas);
